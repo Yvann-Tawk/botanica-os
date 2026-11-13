@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Botanica OS app icon: the menu-bar mark (ringed planet with a sprout) as an enamel pin on paper. -->
+  <rect width="512" height="512" rx="112" fill="#efe8d6"/>
+  <rect x="24" y="24" width="464" height="464" rx="92" fill="#f6f2e8" stroke="#242820" stroke-width="12"/>
+  <path d="M100 300 A 170 52 0 0 1 412 300" transform="rotate(-18 256 300)" fill="none" stroke="#242820" stroke-width="30"/>
+  <path d="M100 300 A 170 52 0 0 1 412 300" transform="rotate(-18 256 300)" fill="none" stroke="#b47e00" stroke-width="18"/>
+  <circle cx="256" cy="290" r="106" fill="#3e6510" stroke="#242820" stroke-width="12"/>
+  <path d="M168 262 Q 256 232 344 262" fill="none" stroke="#b4cfb6" stroke-width="14" opacity="0.8"/>
+  <path d="M172 318 Q 256 346 340 318" fill="none" stroke="#8fb356" stroke-width="10" opacity="0.7"/>
+  <path d="M100 300 A 170 52 0 0 0 412 300" transform="rotate(-18 256 300)" fill="none" stroke="#242820" stroke-width="30"/>
+  <path d="M100 300 A 170 52 0 0 0 412 300" transform="rotate(-18 256 300)" fill="none" stroke="#b47e00" stroke-width="18"/>
+  <path d="M256 186 C 256 150, 270 124, 300 112" fill="none" stroke="#242820" stroke-width="12" stroke-linecap="round"/>
+  <path d="M262 150 C 236 104, 196 98, 172 110 C 186 146, 222 162, 262 150 Z" fill="#8fb356" stroke="#242820" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="404" cy="168" r="22" fill="#c95851" stroke="#242820" stroke-width="10"/>
+</svg>

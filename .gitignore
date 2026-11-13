@@ -1,0 +1,11 @@
+node_modules
+dist
+*.tsbuildinfo
+.DS_Store
+public/pyodide
+test-results
+playwright-report
+
+# Local tooling and duplicates
+.claude/
+botanica-os-source.zip

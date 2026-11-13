@@ -1,0 +1,92 @@
+/* Rules added on top of prototype.css. prototype.css is the verbatim original; keep new rules here. */
+
+/* Settings → "Always reduce motion": same rules as the prototype's prefers-reduced-motion block. */
+.os.rm *,.os.rm *::before,.os.rm *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
+.os.rm .sp-z,.os.rm .sp-z2,.os.rm .sp-leaf,.os.rm .pa{display:none}
+
+/* Windows take focus when they open; the title bar already signals focus, so no ring on the frame itself. */
+.win:focus{outline:none}
+.mitem.app{cursor:default}
+.mitem.app:hover{background:none;color:inherit}
+
+/* Settings window, built from the existing paper + control vocabulary. */
+.settings .set-group{border:0;border-top:1px solid rgba(36,40,32,.15);margin:14px 0 0;padding:4px 0 0}
+.settings .set-group legend{padding:0;margin:14px 0 8px}
+.settings .set-row{display:flex;align-items:center;gap:10px;min-height:32px;font-size:14px;cursor:pointer}
+.settings input[type=radio],.settings input[type=checkbox]{accent-color:#345a04;width:16px;height:16px}
+.settings .set-select{min-height:40px;padding:0 12px;border:1.5px solid #242820;border-radius:10px;background:#f6f2e8;font:inherit;color:#242820}
+
+/* Specimen-sheet concept rows are buttons (they route to lessons); strip UA button styling so .crow looks as designed. */
+:where(.uv-panel) button.crow{width:100%;border:1px solid transparent;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+:where(.uv-panel) button.crow:not(:disabled):hover{background:#26301d}
+:where(.uv-panel) button.crow:disabled{cursor:default}
+/* The chart takes keyboard focus for arrow-key drifting. */
+.uv:focus-visible{outline:2px solid #e2a93b;outline-offset:-4px}
+
+/* Terminal: saved snippets get a delete button beside them. */
+.tm-snip{display:flex;align-items:center;gap:2px}
+.tm-snip .tm-file{flex:1;min-width:0;min-height:40px;align-items:center}
+.tm-del{flex:none;width:28px;height:28px;border:0;border-radius:6px;background:none;color:#8e9584;cursor:pointer;font-size:16px;line-height:1}
+.tm-del:hover{background:#1f281a;color:#f0a79d}
+.btn-g[disabled]{opacity:.45;cursor:not-allowed}
+.tm-repl input:disabled{opacity:.5}
+.ed-monaco .monaco-editor{--vscode-focusBorder:#e58a8080}
+
+/* Academy: lesson picker in the breadcrumb, objectives box and step list (were inline styles in the prototype). */
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ac-crumb-btn{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.ac-crumb-btn:hover{color:#345a04}
+.ac-select{font:inherit;color:inherit;background:transparent;border:1px solid rgba(36,40,32,.25);border-radius:6px;padding:1px 4px;cursor:pointer}
+.ac-goals{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 18px;padding:12px 14px;border:1px solid rgba(36,40,32,.18);border-radius:10px;background:#f1ece0;font-size:13.5px}
+.ac-goals b{width:100%;font-size:12.5px;color:#63685c;font-weight:600}
+.ac-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.55}
+.ac-honest{margin:18px 0 0;font-size:12.5px;color:#63685c;max-width:60ch}
+.qopt:focus-visible,.step:focus-visible{outline:2px solid #c95851;outline-offset:2px}
+
+/* Missions: guided-project milestone list. */
+.ms-steps{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:6px}
+.ms-steps li{display:flex;align-items:center;gap:10px;font-size:14px;color:#63685c}
+.ms-steps .ms-n{width:22px;height:22px;flex:none;display:grid;place-items:center;border-radius:50%;border:1.5px solid #9a9f92;font-size:12px;font-weight:700}
+.ms-steps li.is-done{color:#345a04}
+.ms-steps li.is-done .ms-n{background:#345a04;border-color:#345a04;color:#f6f2e8}
+.ms-steps li.is-cur{color:#242820;font-weight:700}
+.ms-steps li.is-cur .ms-n{background:#c95851;border-color:#242820;color:#1a1410}
+/* Pilot logbook: the name is editable. */
+.pf-name{display:inline-flex;align-items:baseline;gap:8px;margin:0;padding:0;border:0;background:none;font-size:30px;line-height:1.05;color:#242820;cursor:pointer;text-align:left}
+.pf-name .pf-edit{font-family:'Figtree',sans-serif;font-size:14px;color:#63685c}
+.pf-name:hover .pf-edit{color:#345a04}
+.pf-name-in{font-size:24px;padding:2px 8px;border:1.5px solid #242820;border-radius:8px;background:#ffffff;min-width:0;width:14ch;color:#242820}
+
+/* Update prompt: like a toast, but it waits for an answer. */
+.update-bar{position:absolute;left:50%;top:46px;transform:translateX(-50%);z-index:9450;display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;background:#242820;color:#f6f2e8;border-radius:12px;font-size:13.5px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s cubic-bezier(.2,.8,.2,1)}
+.update-bar .btn{min-height:34px}
+
+/* Scrollable regions take keyboard focus (so they can be scrolled with arrow keys); show it only for keyboard users. */
+.scroll:focus:not(:focus-visible),.scroll-d:focus:not(:focus-visible),.con-body:focus:not(:focus-visible){outline:none}
+
+/* Accessibility (WCAG AA contrast): the prototype faded sealed tickets with opacity .72, which pulled their text
+   below 4.5:1. Sealed tickets keep a muted look through a dimmer card and dashed punch-hole instead. */
+.mticket.is-sealed{opacity:1;background:#ece6d7}
+.mticket.is-sealed::before{box-shadow:0 0 0 1.5px #777c70;background:#ece6d7}
+.mticket.is-sealed .mmeta{color:#55594f}
+.mticket.is-boss.is-sealed{background:#3a1f1b}
+.mticket.is-boss.is-sealed .mmeta{color:#e7b8b1}
+
+/* Fix (also present in the prototype): `.os button{color:inherit}` outranks single-class button colours, so dark-panel
+   buttons rendered ink-on-dark. Re-state the intended colours with enough specificity. */
+.os .tm-tab{color:#8e9584}
+.os .tm-tab.is-on{color:#ece6d6}
+.os .tm-file{color:#d7d9cb}
+.os .tm-file.is-on{color:#ffffff}
+.os .btn-g{color:#d7d9cb}
+.os .btn-run{color:#12180e}
+.os .btn-d{color:#12180e}
+.os .btn-d.ghost{color:#ece6d6}
+.os .xbtn{color:#ece6d6}
+.os .hintbtn{color:#345a04}
+.os .step{color:#63685c}
+.os .step.is-done{color:#345a04}
+.os .step.is-cur{color:#242820}
+/* Gutter numbers: #5f6a55 measured 3.0:1 on the code ground; nudged to pass 4.5:1. */
+.ed-gutter{color:#7f8a74}
+.ac-select{max-width:26ch}

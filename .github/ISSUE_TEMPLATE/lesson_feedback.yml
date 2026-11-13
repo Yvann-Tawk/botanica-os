@@ -1,0 +1,25 @@
+name: Lesson feedback
+description: Something in a lesson, mission or hint is unclear, wrong, or could be better.
+labels: [content]
+body:
+  - type: input
+    id: lesson
+    attributes:
+      label: Which lesson or mission?
+      placeholder: "The Flow · Lesson 03 · while loops (Challenge)"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem?
+      options: [Explanation is unclear, A check rejects a correct solution, A check accepts a wrong solution, A hint is unhelpful, Typo or wording, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: If a check misjudged your code, paste the code here.
+    validations:
+      required: true

@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in Botanica OS doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Please don't include personal information. For security problems, see SECURITY.md instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Academy, Lesson …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Python code involved (if any)
+      render: python
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 138 on macOS 15
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [Desktop / windows, Universe, Academy, Terminal, Missions, Workshop, Pilot logbook, Settings, Offline / install, Other]
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output or screenshots
+      description: Anything from the app's console, or the browser's developer console.

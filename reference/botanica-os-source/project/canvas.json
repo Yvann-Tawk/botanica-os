@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-11T19:20:00Z"},
+  "title": "The Botanical Cosmos",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 900, "title": "Botanica OS — live prototype", "expand": "fill", "is_interactive": true},
+    "Desktop.dc.html": {"x": 0, "y": 1240, "w": 1440, "h": 900, "title": "01 Desktop", "is_interactive": true},
+    "Universe.dc.html": {"x": 1520, "y": 1240, "w": 1440, "h": 900, "title": "02 Universe", "is_interactive": true},
+    "Academy.dc.html": {"x": 3040, "y": 1240, "w": 1440, "h": 900, "title": "03 Academy", "is_interactive": true},
+    "Missions.dc.html": {"x": 0, "y": 2260, "w": 1440, "h": 900, "title": "04 Missions", "is_interactive": true},
+    "Profile.dc.html": {"x": 1520, "y": 2260, "w": 1440, "h": 900, "title": "05 Pilot Profile", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Desktop.dc.html", "Universe.dc.html", "Academy.dc.html", "Missions.dc.html", "Profile.dc.html"],
+  "notes": {
+    "tokens": {"x": 1520, "y": 0, "w": 400, "fill": "green", "text": "Design tokens\n\nPaper #f6f2e8 · Cream #eae4d5 · Ink #242820\nStone #777c70 (decor) · #63685c (small text, passes 4.5:1)\nMoss #3e6510 · Forest #345a04 · Sage #b4cfb6\nTerracotta #c95851 (text on paper: #a8423c)\nOchre #b47e00 (text on paper: #8a6000)\n\nCosmos: #12180e ground · #1b2315 panels · #ece6d6 text\nCode: #171d12 ground · bright ochre #e2a93b · bright terracotta #e58a80"},
+    "type": {"x": 2000, "y": 0, "w": 400, "fill": "orange", "text": "Type & materials\n\nDisplay: Young Serif — 70s sci-fi paperback voice\nInterface: Figtree 400–700\nCode: JetBrains Mono (ligatures off)\n\nWindows: 1.5px ink border, 12px radius, hard 5px offset shadow, pinstriped title bar. Icons are enamel-pin objects, not line icons. Paper grain sits over the whole desktop."},
+    "interactions": {"x": 1520, "y": 560, "w": 400, "fill": "blue", "text": "Try it (press Play)\n\nDouble-click desktop objects or use the tray · drag title bars, resize from the corner, double-click a title bar to maximize\nUniverse: drag to drift, scroll to zoom, click a planet\nAcademy: ⌘/Ctrl+Enter runs code · finish Master to watch Origins grow\nMissions: fix the four labels, run the checks\nSprout: click to pet; naps after 40s idle\nTweaks: Open on · Journey stage"},
+    "limits": {"x": 2000, "y": 560, "w": 400, "fill": "pink", "text": "Prototype limits\n\nPython runs in a small JS interpreter that covers Origins-level syntax only (values, operators, f-strings, print/type/int/str/len, string methods). No blocks, loops or defs — it says so politely when you try.\n\nFor the real build: swap it for Pyodide in a Web Worker and keep the same console + Sprout error explanations."},
+    "refs": {"x": 0, "y": 940, "text": "Reference screens — each one mounts the live prototype on a different app", "kind": "title1", "maxW": 4480}
+  },
+  "designSystems": []
+}

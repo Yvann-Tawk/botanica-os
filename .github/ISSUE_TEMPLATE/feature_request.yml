@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest an idea for Botanica OS.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help with?
+      description: Describe the learner (or contributor) need first, then the idea.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+    validations:
+      required: true
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fits the project
+      options:
+        - label: Works offline and keeps learner code on the device (no new runtime services)
+        - label: Keeps the botanical, retro-futuristic design

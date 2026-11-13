@@ -1,0 +1,11 @@
+{
+  "location": "Hortensia Greenhouse",
+  "units": "celsius",
+  "days": [
+    { "date": "2026-11-14", "high": 24, "low": 15, "rain_mm": 0 },
+    { "date": "2026-11-15", "high": 22, "low": 14, "rain_mm": 3.5 },
+    { "date": "2026-11-16", "high": 19, "low": 12, "rain_mm": 8.0 },
+    { "date": "2026-11-17", "high": 21, "low": 13, "rain_mm": 0 },
+    { "date": "2026-11-18", "high": 26, "low": 16, "rain_mm": 1.2 }
+  ]
+}
