@@ -1,12 +1,12 @@
 // @vitest-environment node
 // Missions and the guided project, checked against real Python.
-import { loadPyodide } from 'pyodide';
+import { loadPython } from './loadPython';
 import { createRunner, type Runner } from '../src/runtime/pyCore';
 import { MISSIONS, type Mission } from '../src/content/missions';
 import type { Check } from '../src/content/lessons/types';
 
 let runner: Runner;
-beforeAll(async () => { runner = await createRunner(await loadPyodide(), { write: () => {}, input: () => null }); }, 60000);
+beforeAll(async () => { runner = await createRunner(await loadPython(), { write: () => {}, input: () => null }); }, 60000);
 
 const passes = async (m: Mission, checks: Check[], code: string) =>
   (await runner.check(code, m.filename!, JSON.stringify({ checks, inputs: m.inputs ?? [] }))).results.every(Boolean);

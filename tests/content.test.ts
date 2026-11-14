@@ -2,7 +2,7 @@
 // Every lesson in every galaxy, checked against real Python: model solutions (and alternatives) pass every check,
 // starters and common wrong answers fail, and the worked examples run cleanly.
 import { readFileSync } from 'node:fs';
-import { loadPyodide } from 'pyodide';
+import { loadPython } from './loadPython';
 import { createRunner, type Runner } from '../src/runtime/pyCore';
 import { ALL_LESSONS } from '../src/content/lessons';
 import { LESSONS, REGIONS } from '../src/content/curriculum';
@@ -24,7 +24,7 @@ beforeAll(async () => {
       try { this.responseText = this.response = readFileSync(`public${path}`, 'utf8'); this.status = 200; } catch { this.status = 404; this.responseText = this.response = 'Not found'; }
     }
   };
-  runner = await createRunner(await loadPyodide(), { write: () => {}, input: () => null });
+  runner = await createRunner(await loadPython(), { write: () => {}, input: () => null });
 }, 60000);
 
 const check = (ex: Exercise, code: string) => runner.check(code, 'lesson.py', JSON.stringify({ checks: ex.checks, inputs: ex.inputs ?? [] }));

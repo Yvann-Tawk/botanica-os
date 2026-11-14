@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Integration tests against real Python (Pyodide in Node). Slower than the rest; covers what the worker runs.
-import { loadPyodide } from 'pyodide';
+import { loadPython } from './loadPython';
 import { createRunner, type Runner } from '../src/runtime/pyCore';
 
 let runner: Runner;
@@ -8,7 +8,7 @@ let out = '', err = '';
 let answers: (string | null)[] = [];
 
 beforeAll(async () => {
-  const py = await loadPyodide();
+  const py = await loadPython();
   runner = await createRunner(py, {
     write: (s, t) => { if (s === 'stdout') out += t; else err += t; },
     input: () => (answers.length ? answers.shift()! : null),
