@@ -72,9 +72,12 @@ test('works offline: the app reloads from the service worker and Python still ru
   // Make sure Python is cached (it normally is after its first load).
   await page.goto('/?start=settings');
   const s = win(page, 'Settings');
+  // Wait until Settings knows the cache state (lazy window + async check) before deciding whether to click.
   const btn = s.getByRole('button', { name: 'Make Python available offline' });
+  const stored = s.getByText('Python is stored on this device');
+  await expect(btn.or(stored)).toBeVisible({ timeout: 30_000 });
   if (await btn.isVisible()) await btn.click();
-  await expect(s.getByText('Python is stored on this device')).toBeVisible({ timeout: 60_000 });
+  await expect(stored).toBeVisible({ timeout: 60_000 });
 
   await context.setOffline(true);
   await page.goto('/?start=terminal');
