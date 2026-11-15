@@ -97,7 +97,7 @@ export async function exportBackup(kv: KV): Promise<Backup> {
 export async function importBackup(kv: KV, raw: unknown): Promise<number> {
   const b = raw as Partial<Backup> | null;
   if (!b || b.app !== 'botanica-os' || b.format !== 1 || !b.data || typeof b.data !== 'object') {
-    throw new Error('This file is not a Botanica OS backup.');
+    throw new Error('This file is not a Terraform OS (Botanica) backup.');
   }
   const entries = Object.entries(b.data);
   for (const [k, v] of entries) await kv.set(k, v);

@@ -1,8 +1,8 @@
 {
-  "name": "botanica-os",
+  "name": "terraform-os",
   "private": true,
   "version": "0.1.0",
-  "description": "Learn Python by exploring a botanical cosmos: an installable web app that runs real Python in your browser.",
+  "description": "Terraform OS: learn to code by exploring worlds. Botanica, the first world, teaches Python with real Python running in your browser.",
   "license": "MIT",
   "type": "module",
   "scripts": {
