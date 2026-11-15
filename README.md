@@ -1,8 +1,23 @@
-# Botanica OS — The Botanical Cosmos
+# Terraform OS
 
-Learn Python by exploring a botanical cosmos. Botanica OS is a playful, retro-futuristic "operating system" in your
-browser: a star chart of eight Python systems to explore, an Academy that teaches with real code, missions and a
-guided project, a terminal, and Sprout, a snake who lives in the tray.
+Learn to code by exploring worlds. Terraform OS is a playful, retro-futuristic "operating system" in your browser.
+It opens on **Orbis**, a celestial hub where you chart the worlds, follow your progress in the Journal and pick where
+to go next.
+
+| World | Languages | Status |
+|---|---|---|
+| **Botanica** | Python | Open (V1.0) |
+| Lithic | HTML, DAX, Power Query M | Coming soon (V2.0–V4.0) |
+| Aether | JavaScript, CSS | Coming soon (V5.0–V6.0) |
+| Ironworks | C#, SQL | Coming soon (V7.0–V8.0) |
+
+How the hub and the worlds fit together: [docs/TERRAFORM.md](docs/TERRAFORM.md).
+
+## Botanica — the Python world
+
+Botanica (formerly Botanica OS) teaches Python by exploring a botanical cosmos: a star chart of eight Python systems,
+an Academy that teaches with real code, missions and a guided project, a terminal, and Sprout, a snake who lives in
+the tray.
 
 Everything runs on your device. Python executes in your browser (via [Pyodide](https://pyodide.org)), your code is
 never sent anywhere, there are no accounts, and progress is stored locally. It installs as an app and works offline.

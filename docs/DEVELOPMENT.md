@@ -6,7 +6,10 @@ How the pieces fit, and how to work on each. For the big picture see [ARCHITECTU
 
 ```
 src/
-  main.tsx, App.tsx, boot.ts     start-up, the shell, launch state (?start=, ?demo=)
+  main.tsx, boot.ts              start-up; launch place (Orbis, or Botanica for #/botanica, ?start=, ?demo=)
+  terraform/                     Terraform OS: TerraformOS.tsx (shell), Orbis.tsx (hub), worlds.ts (registry),
+                                 journal.ts (hub view model), prefs.ts, art.tsx (Orbis SVG) — see docs/TERRAFORM.md
+  App.tsx                        Botanica, the Python world (optional Terraform hooks as props)
   shell/                         desktop, menu bar, dock, windows (windowReducer.ts), toasts, celebration
   apps/                          one folder per window: universe, academy, terminal, missions, profile, workshop
   editor/                        CodeEditor (simple editor + lazy Monaco), Console, highlighter
@@ -15,11 +18,11 @@ src/
   progression/                   progress.ts (completion, gating), engine.ts (XP, levels, streaks, mastery), useLearning.ts
   mascot/                        Sprout's art, moods and timing
   storage/                       IndexedDB key-value store with fallbacks, settings, backups
-  styles/                        prototype.css (verbatim original), additions.css (everything new)
+  styles/                        prototype.css (verbatim original), additions.css (everything new), orbis.css (hub, scoped)
 tests/                           Vitest: unit, integration, content (real Python), solutions/ for content tests
 e2e/                             Playwright: real browser, production build
 public/                          icons, sample data (data/), pyodide/ (copied at build time, not committed)
-reference/                       the original design prototype export
+reference/                       the design exports: botanica-os-source/, terraform-os-orbis-source/
 ```
 
 ## Python runtime
@@ -64,7 +67,8 @@ tolerance; `bool` never matches `int`. Starting values can use `{ "__set__": [..
 - `useLearning.ts`: the app's store; apps report events (`exercise`, `quiz`, `lessonDone`, `milestone`,
   `missionDone`, `lessonMission`, `ran`) and it decides XP, achievements and celebrations.
 
-Saved keys (IndexedDB `botanica` → `kv`): `settings`, `layout`, `progress`, `progression`, `terminal`,
+Saved keys (IndexedDB `botanica` → `kv`): `settings` (shared by Orbis and Botanica), `orbis` (hub preferences and
+layout), `layout`, `progress`, `progression`, `terminal`,
 `lesson:<id>`, `mission:<id>`, `lmission:<id>` (an optional lesson mission's code, ticks, hints and attempts;
 kept apart from lesson progress). Schema changes go through `MIGRATIONS` in `storage/db.ts`; every loader normalises
 old or hand-edited data.
