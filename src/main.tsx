@@ -10,7 +10,8 @@ import '@fontsource/jetbrains-mono/500.css';
 import '@fontsource/jetbrains-mono/700.css';
 import './styles/prototype.css';
 import './styles/additions.css';
-import App from './App';
+import './styles/orbis.css';
+import TerraformOS from './terraform/TerraformOS';
 import { boot } from './boot';
 import { openKV } from './storage/db';
 import { registerSW } from 'virtual:pwa-register';
@@ -25,10 +26,10 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 }
 
 const kv = await openKV();
-const { settings, shell, progress, progression, demo } = await boot(kv, window.location.search);
+const { place, orbis, settings, shell, progress, progression, demo } = await boot(kv, window.location.search, window.location.hash);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App kv={kv} initialSettings={settings} initialShell={shell} initialProgress={progress} initialProgression={progression} demo={demo} />
+    <TerraformOS kv={kv} place={place} settings={settings} orbis={orbis} botanica={{ shell, progress, progression, demo }} />
   </StrictMode>,
 );

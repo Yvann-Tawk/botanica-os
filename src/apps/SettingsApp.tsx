@@ -58,7 +58,7 @@ export default function SettingsApp({ settings, onChange, storageKind, onResetLa
 
       <fieldset className="set-group">
         <legend className="h3">Sprout</legend>
-        <label className="set-row"><input type="checkbox" checked={settings.sproutChatty} onChange={(e) => set('sproutChatty', e.target.checked)} /> Let Sprout chime in on its own</label>
+        <label className="set-row"><input type="checkbox" checked={settings.sproutChatty} onChange={(e) => set('sproutChatty', e.target.checked)} /> Let Sprout react to milestones (lessons, level-ups) on its own</label>
       </fieldset>
 
       <fieldset className="set-group">

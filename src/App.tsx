@@ -28,7 +28,6 @@ const MissionsApp = lazy(() => import('./apps/missions/MissionsApp'));
 const ProfileApp = lazy(() => import('./apps/profile/ProfileApp'));
 const WorkshopApp = lazy(() => import('./apps/workshop/WorkshopApp'));
 
-const GREETING = 'Psst. Double-click anything that looks curious. I live here in the tray.';
 const LAYOUT_SAVE_MS = 300;
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -37,11 +36,28 @@ interface Props {
   initialProgression?: Progression;
   /** Set when a ?demo= preset is showing; progress is then display-only and never saved. */
   demo?: string | null;
+  /* ---- Terraform OS hooks. All optional: without them Botanica runs exactly as it did on its own. ---- */
+  /** False while the learner is in Orbis: Botanica stays mounted but ignores global shortcuts. */
+  active?: boolean;
+  /** Settings owned by the Terraform shell (shared with Orbis). */
+  settings?: Settings;
+  onSettingsChange?: (s: Settings) => void;
+  /** Reports progress so Orbis can show it. */
+  onLearning?: (progress: Progress, progression: Progression) => void;
+  /** Adds "Return to Orbis" to the Go menu. */
+  onExitToOrbis?: () => void;
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => Promise<boolean>;
+  /** Opens a lesson when it changes (Orbis Journal's "Resume in Botanica"). */
+  resume?: { lessonId: string; key: number };
 }
 
-export default function App({ kv, initialSettings, initialShell: init, initialProgress, initialProgression, demo = null }: Props) {
+export default function App({ kv, initialSettings, initialShell: init, initialProgress, initialProgression, demo = null,
+  active = true, settings: sharedSettings, onSettingsChange, onLearning, onExitToOrbis, fullscreen = false, onToggleFullscreen, resume }: Props) {
   const [shell, dispatch] = useReducer(shellReducer, init);
-  const [settings, setSettings] = useState(initialSettings);
+  const [ownSettings, setOwnSettings] = useState(initialSettings);
+  const settings = sharedSettings ?? ownSettings;
+  const setSettings = (s: Settings) => { setOwnSettings(s); onSettingsChange?.(s); };
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [lessonRoute, setLessonRoute] = useState<string | null>(null);
   const [missionRoute, setMissionRoute] = useState<string | null>(null);
@@ -53,7 +69,8 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
   const [termFile, setTermFile] = useState<string | undefined>();
   const [size, setSize] = useState({ W: 1440, H: 900 });
   const root = useRef<HTMLDivElement>(null);
-  const sprout = useSprout(GREETING, settings.sproutChatty);
+  // No greeting: Sprout only speaks when spoken to, or (if allowed in Settings) at real milestones.
+  const sprout = useSprout(null, settings.sproutChatty);
   const { poke, say } = sprout;
 
   const toast = useCallback((text: string, xpText?: string) => {
@@ -88,8 +105,8 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
   const notify: Notify = {
     xp: (n) => { setFly({ n, key: Date.now() }); setXpPulse((p) => p + 1); setTimeout(() => setFly(null), 1500); },
     toast,
-    say: (t, m) => say(t, m ?? 'happy', 2400, true),
-    levelUp: (n, name) => { toast(`Level ${n} · ${name}`, 'level up'); say(`Level ${n}. ${name}. I can feel myself growing, metaphorically and also literally.`, 'celebrating', 3000, true); },
+    say: (t, m) => say(t, m ?? 'happy', 2400),
+    levelUp: (n, name) => { toast(`Level ${n} · ${name}`, 'level up'); say(`Level ${n}. ${name}. I can feel myself growing, metaphorically and also literally.`, 'celebrating', 3000); },
     conceptCompleted: (conceptId, p) => {
       const c = conceptById(conceptId), region = REGIONS.find((r) => r.concepts.some((x) => x.id === conceptId))!, ri = REGIONS.indexOf(region);
       const lit = regionStatus(p)[ri].done, full = lit === 6;
@@ -102,22 +119,26 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
         lit, constLabel: `${region.constellation.toUpperCase()} · ${lit} OF 6 STARS LIT`,
         primaryLabel: 'See it on the chart', onPrimary: () => { setCele(null); openChart(); },
       });
-      say(full ? 'A WHOLE PLANET. In bloom. Because of you.' : 'WE GREW A SPROUT. I am not crying, it is condensation.', 'celebrating', 3000, true);
+      say(full ? 'A WHOLE PLANET. In bloom. Because of you.' : 'WE GREW A SPROUT. I am not crying, it is condensation.', 'celebrating', 3000);
     },
   };
   const needRefresh = useSyncExternalStore(subscribePwa, () => pwa.needRefresh, () => false);
   const offlineReady = useSyncExternalStore(subscribePwa, () => pwa.offlineReady, () => false);
-  useEffect(() => { if (offlineReady) toast('Botanica OS now opens offline', 'Python joins it after its first run'); }, [offlineReady, toast]);
+  useEffect(() => { if (offlineReady) toast('Terraform OS now opens offline', 'Python joins it after its first run'); }, [offlineReady, toast]);
   const learning = useLearning({ kv, demo: !!demo, initialProgress, initialProgression: initialProgression ?? normalizeProgression(null), notify });
   const { progress, progression, xp, level } = learning;
   useEffect(() => onAnyRun(learning.ran), [learning.ran]);
+  useEffect(() => { onLearning?.(progress, progression); }, [onLearning, progress, progression]);
 
   /* ---- persistence ---- */
   useEffect(() => {
     const t = setTimeout(() => { kv.set('layout', toLayout(shell)).catch(() => {}); }, LAYOUT_SAVE_MS);
     return () => clearTimeout(t);
   }, [kv, shell.wins, shell.ztop, shell.focus]);
-  const changeSettings = (s: Settings) => { setSettings(s); kv.set('settings', s).catch(() => toast('Settings could not be saved on this device')); };
+  const changeSettings = (s: Settings) => {
+    setSettings(s);
+    if (!onSettingsChange) kv.set('settings', s).catch(() => toast('Settings could not be saved on this device')); // otherwise the shell saves it
+  };
 
   /* ---- focus follows windows: into a window when it opens, back to its dock button when it hides ---- */
   const prevWins = useRef(shell.wins);
@@ -135,6 +156,7 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
 
   /* ---- global keyboard ---- */
   useEffect(() => {
+    if (!active) return;
     const onKey = (e: KeyboardEvent) => {
       poke();
       if (e.key === 'Escape' && shell.menu) { dispatch({ type: 'menu', menu: null }); return; }
@@ -146,7 +168,7 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [shell.menu, open, poke]);
+  }, [active, shell.menu, open, poke]);
 
   /* ---- backup ---- */
   const doExport = async () => {
@@ -168,12 +190,10 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
 
   useEffect(() => { if (demo) toast(`Demo preset “${demo}”. Progress shown is not yours and is not saved.`); }, [demo, toast]);
 
-  /* ---- a streak greeting, once per launch ---- */
   const days = useMemo(() => streak(progression), [progression]);
-  useEffect(() => {
-    const d = streak(progression);
-    if (d >= 2) { const t = setTimeout(() => say(`Day ${d} of your streak. The seedlings noticed.`, 'happy', 2000), 8000); return () => clearTimeout(t); }
-  }, []); // once
+
+  /* ---- Orbis asked to resume a lesson ---- */
+  useEffect(() => { if (resume) openLesson(resume.lessonId); }, [resume?.key]);
 
   /* ---- menus ---- */
   const next = nextStep(progress);
@@ -185,11 +205,15 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
     go: [
       ...withGlyph.map((a, i) => ({ label: a.longName, hint: '⌘' + (i + 1), run: () => open(a.id) })),
       { label: 'Settings', hint: '⌘,', run: () => open('settings'), sep: true },
+      ...(onExitToOrbis ? [{ label: 'Return to Orbis', hint: 'hub', run: () => { setMenu(null); onExitToOrbis(); }, sep: true }] : []),
     ],
     win: [
       { label: 'Arrange windows', hint: 'cascade', run: () => dispatch({ type: 'cascade' }) },
       { label: 'Minimize all', hint: 'to the tray', run: () => dispatch({ type: 'minimizeAll' }) },
       { label: 'Enter the Universe', hint: 'full view', run: () => { open('universe', true); setFitSignal((n) => n + 1); }, sep: true },
+      ...(onToggleFullscreen ? [{ label: fullscreen ? 'Exit fullscreen' : 'Enter fullscreen', hint: 'screen', run: () => {
+        setMenu(null); onToggleFullscreen().then((ok) => { if (!ok) toast('Fullscreen is not available here'); });
+      } }] : []),
     ],
     help: [
       { label: 'Ask Sprout for a nudge', hint: '?', run: () => { setMenu(null); say(nudge(), 'happy', 2000, true); } },
@@ -241,7 +265,7 @@ export default function App({ kv, initialSettings, initialShell: init, initialPr
       <Toasts toasts={toasts} />
       {needRefresh && (
         <div className="update-bar" role="status">
-          <span>A new version of Botanica OS is ready. Your work is saved.</span>
+          <span>A new version of Terraform OS is ready. Your work is saved.</span>
           <button className="btn moss" onClick={() => pwa.update()}>Reload now</button>
         </div>
       )}

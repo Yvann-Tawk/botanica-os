@@ -154,3 +154,47 @@ test('async & await runs for real in the browser (stack switching)', async ({ pa
   await expect(a.getByText('Logged')).toBeVisible({ timeout: 60_000 });
   await expect(a.getByRole('log')).toContainText("['B1 watered', 'B2 watered', 'B3 watered']");
 });
+
+test('Terraform OS opens on Orbis; Botanica launches for real and the learner can come back', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('Terraform OS');
+  const explorer = win(page, 'Orbis Explorer');
+  await expect(explorer).toHaveClass(/is-open/);
+  await explorer.getByRole('button', { name: /Ironworks/ }).click();
+  await expect(explorer.getByRole('button', { name: 'Coming soon' })).toBeDisabled();
+  await explorer.getByRole('button', { name: /Botanica/ }).first().click();
+  await explorer.getByRole('button', { name: 'Enter Botanica' }).click();
+  await expect(page.getByRole('navigation', { name: 'Seed tray' })).toBeVisible();
+  await expect(page).toHaveURL(/#\/botanica$/);
+  await page.goBack();
+  await expect(win(page, 'Orbis Explorer')).toBeVisible();
+  await page.goForward();
+  await expect(page.getByRole('navigation', { name: 'Seed tray' })).toBeVisible();
+  await page.getByRole('button', { name: 'Go' }).click();
+  await page.getByRole('menuitem', { name: /Return to Orbis/ }).click();
+  await expect(win(page, 'Orbis Explorer')).toBeVisible();
+});
+
+test('fullscreen: Orbis Settings enters and leaves real fullscreen', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Go' }).click();
+  await page.getByRole('menuitem', { name: /Settings/ }).click();
+  const s = win(page, 'Settings');
+  await s.getByRole('button', { name: 'Enter' }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await s.getByRole('button', { name: 'Exit' }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+});
+
+test('accessibility: the Orbis hub has no axe (WCAG 2.1 AA) violations', async ({ page }) => {
+  await page.goto('/');
+  await expect(win(page, 'Orbis Explorer')).toHaveClass(/is-open/);
+  await page.waitForTimeout(800);
+  for (const sel of ['.orbis .mbar', '.orbis .dock', '.orbis .dicons', '.orbis .note', '.orbis section[data-app="orbis"]']) await scan(page, sel);
+  for (const app of ['Journal', 'Settings']) {
+    await page.getByRole('button', { name: 'Go' }).click();
+    await page.getByRole('menuitem', { name: new RegExp(app) }).click();
+    await page.waitForTimeout(800);
+    await scan(page, `.orbis section[data-app="${app.toLowerCase()}"]`);
+  }
+});

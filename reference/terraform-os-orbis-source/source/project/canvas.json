@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-15T13:00:00Z"},
+  "title": "Terraform OS — Orbis Hub",
+  "launch": {"view": "focused", "file": "Main.dc.html"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 900, "title": "Orbis Hub — live prototype", "expand": "fill", "is_interactive": true},
+    "Orbis.dc.html": {"x": 0, "y": 1140, "w": 1440, "h": 900, "title": "Orbis — Botanica selected", "is_interactive": true},
+    "AetherPreview.dc.html": {"x": 1520, "y": 1140, "w": 1440, "h": 900, "title": "Orbis — Coming-soon preview", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Orbis.dc.html", "AetherPreview.dc.html"],
+  "notes": {
+    "tokens": {"x": 1520, "y": -40, "w": 420, "fill": "blue", "text": "Orbis palette (its own celestial identity)\n\nMidnight navy #101827 · Deep indigo #292D50\nAntique gold #D6AC68 · Celestial cyan #91DCE8\nWarm ivory #F4EDE0 · Terracotta #C95851\n\nText on navy: ivory #F4EDE0, muted #9AA1C0 (passes 4.5:1), gold #D6AC68.\nIvory instrument panels keep it warm, not a dark dashboard. Brass frames + chart lines, no neon, no glass.\n\nType reuses Botanica's family so the hub reads as the same universe: Young Serif (display) · Figtree (UI) · JetBrains Mono (labels)."},
+    "interactions": {"x": 1520, "y": 470, "w": 420, "fill": "gold", "text": "Try it (press Play)\n\nThe orrery is the navigator — hover a world to raise it, click to dock its dossier on the right.\nBotanica → Enter World launches a simulated transition (in the full build it opens the untouched Botanica OS).\nLithic / Aether / Ironworks → Preview only; they never open a non-existent world, and carry planned version numbers, not dates.\nMove the pointer to parallax the starfield · Focus collapses the chrome · Settings drawer has motion + sound toggles.\nThe navigator's journal below is the personal dashboard."},
+    "scope": {"x": 1980, "y": -40, "w": 420, "fill": "green", "text": "Scope — Orbis only\n\nThis is the hub that wraps the existing Botanica OS. Botanica itself is NOT rebuilt or changed here: 'Enter Botanica' is a simulated launch, and the real Botanica OS canvas stays exactly as it was.\n\nLithic, Aether and Ironworks are future destinations with their own mini-identities (crystal, floating isles, ironworks) and planned versions — shown as worlds worth waiting for, not disabled cards."},
+    "refs": {"x": 0, "y": 840, "text": "Reference states — the hub on two docked worlds", "kind": "title1", "maxW": 3000}
+  },
+  "designSystems": []
+}
