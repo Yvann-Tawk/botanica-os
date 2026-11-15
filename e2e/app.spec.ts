@@ -128,8 +128,15 @@ test('keyboard only: reach the dock, open a window, use a menu, and Escape out',
 
 async function solveInAcademy(page: Page, lessonLabel: RegExp, code: string) {
   // Use the plain editor so the test can type exactly (Monaco auto-closes brackets).
+  const simple = 'Simple editor everywhere (lighter, plain text area)';
   await page.goto('/?start=settings');
-  await win(page, 'Settings').getByLabel('Simple editor everywhere (lighter, plain text area)').check();
+  await win(page, 'Settings').getByLabel(simple).check();
+  // The setting saves asynchronously; navigating before the write lands loses it and leaves Monaco auto-indenting the typed code.
+  await expect.poll(() => page.evaluate(() => new Promise((res) => {
+    const o = indexedDB.open('botanica');
+    o.onsuccess = () => { const g = o.result.transaction('kv').objectStore('kv').get('settings'); g.onsuccess = () => res(g.result?.editor); };
+    o.onerror = () => res(null);
+  }))).toBe('simple');
   await page.goto('/?start=academy');
   const a = win(page, 'Academy');
   const picker = a.getByLabel('Choose a lesson');
