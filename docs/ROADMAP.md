@@ -178,3 +178,18 @@ tests/windowReducer.test.ts, tests/shell.test.tsx, tests/settings.test.ts
 5. **Fonts:** self-host (recommended, needed for offline) vs. Google Fonts CDN.
 6. **Settings window:** the prototype has none — OK to add one built only from existing window/control styles?
 7. **License** (decided at M7): MIT / Apache-2.0 for code; content (lessons) possibly CC BY-SA. Options presented then.
+
+### Lesson recaps and optional missions — as delivered (2026-11-15)
+- **Schema**: `Lesson = LessonCore & { recap, missions }`. Recaps and missions live in `src/content/lessons/extras/`
+  (one file per galaxy) and are merged into the lessons by id; the core lesson files are unchanged apart from a type import.
+- **Recap** (every lesson, 48): what you learned (3–5), a syntax cheat sheet (snippets that run as written), common
+  mistakes (why and how to avoid), an unscored knowledge check, and next steps (continue learning, explore missions).
+  Opens once the lesson is complete; revisitable any time.
+- **Optional missions** (3 per lesson, 144): The Seed (+15 XP), The Sprout (+30 XP), The Bloom (+50 XP), each with a
+  briefing, objective, expected behaviour, starter code, progressive hints and checks run by the same Python checker,
+  including hidden cases so several correct solutions pass and hard-coded answers fail. Open after the lesson is
+  complete, in any order; never required. XP is paid once per mission (award key `lm:<id>`); progress is saved under
+  `lmission:<id>`, separate from lesson progress. Missions count as reinforcement for mastery and feed three new
+  optional achievements (Curious Seedling, Full Bloom, Green Thumb).
+- **Verified**: 623 unit/integration/content tests (every recap snippet runs; every mission's starter and wrong answers
+  fail and model solutions pass, in real Python) and 9 end-to-end tests including the axe scan.

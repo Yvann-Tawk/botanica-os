@@ -8,6 +8,8 @@ import { ALL_LESSONS } from '../src/content/lessons';
 import { LESSONS, REGIONS } from '../src/content/curriculum';
 import type { Exercise } from '../src/content/lessons/types';
 import { SOLUTIONS } from './solutions';
+import { MISSION_SOLUTIONS } from './solutions/missions';
+import { TIERS } from '../src/content/lessons/types';
 
 let runner: Runner;
 beforeAll(async () => {
@@ -71,6 +73,58 @@ for (const lesson of ALL_LESSONS) {
         expect(r.error, `${r.error?.text}\n---\n${code}`).toBeNull();
       }
     });
+  });
+}
+
+describe('recaps and optional missions', () => {
+  it('mission ids are unique and tied to their lesson', () => {
+    const ids = ALL_LESSONS.flatMap((l) => (l.missions ?? []).map((m) => m.id));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(ALL_LESSONS.length * 3);
+  });
+});
+
+for (const lesson of ALL_LESSONS) {
+  describe(`${lesson.id} ${lesson.title}: recap and missions`, () => {
+    it('has a complete recap', () => {
+      const r = lesson.recap;
+      expect(r, 'recap missing in src/content/lessons/extras').toBeTruthy();
+      expect(r.takeaways.length).toBeGreaterThanOrEqual(3);
+      expect(r.takeaways.length).toBeLessThanOrEqual(5);
+      expect(r.syntaxExamples.length).toBeGreaterThanOrEqual(2);
+      expect(r.commonMistakes.length).toBeGreaterThanOrEqual(2);
+      expect(r.commonMistakes.length).toBeLessThanOrEqual(3);
+      expect(r.knowledgeChecks.length).toBeGreaterThanOrEqual(2);
+      expect(r.knowledgeChecks.length).toBeLessThanOrEqual(3);
+      r.knowledgeChecks.forEach((q) => expect(q.a).toBeLessThan(q.opts.length));
+    });
+    it('cheat-sheet snippets run as written', async () => {
+      for (const ex of lesson.recap.syntaxExamples) {
+        // Snippets that call input() may want text or a number: try a name first, then digits.
+        let r = await runner.check(ex.code, 'recap.py', JSON.stringify({ checks: [], inputs: SOLUTIONS[lesson.id]?.inputs ?? ['Ilse', '5', '3', '2', '1'] }));
+        if (r.error) r = await runner.check(ex.code, 'recap.py', JSON.stringify({ checks: [], inputs: ['5', '3', '2', '1'] }));
+        expect(r.error, `${r.error?.text}\n---\n${ex.code}`).toBeNull();
+      }
+    });
+    it('has exactly three missions: Seed, Sprout, Bloom', () => {
+      expect(lesson.missions).toHaveLength(3);
+      lesson.missions.forEach((m, i) => {
+        expect([m.id, m.lessonId, m.tier, m.difficulty, m.xpReward]).toEqual([`${lesson.id}-m${i + 1}`, lesson.id, TIERS[i].tier, TIERS[i].difficulty, TIERS[i].xp]);
+        for (const text of [m.title, m.description, m.objective, m.expected]) expect(text.length).toBeGreaterThan(3);
+        expect(m.hints.length).toBeGreaterThanOrEqual(2);
+        expect(m.checks.length).toBeGreaterThan(0);
+      });
+    });
+    for (const [i, tier] of TIERS.entries()) {
+      it(`${tier.name}: solutions pass, the starter and wrong answers fail`, async () => {
+        const m = lesson.missions[i], sol = MISSION_SOLUTIONS[m.id];
+        expect(sol, `no model solution for ${m.id}`).toBeTruthy();
+        const run = (code: string) => runner.check(code, 'mission.py', JSON.stringify({ checks: m.checks, inputs: m.inputs ?? [] }));
+        expect((await run(m.starterCode)).results.every(Boolean), 'starter passes').toBe(false);
+        for (const code of sol.ok) expect((await run(code)).results, code).toEqual(m.checks.map(() => true));
+        for (const code of sol.wrong ?? []) expect((await run(code)).results.every(Boolean), code).toBe(false);
+      });
+    }
   });
 }
 

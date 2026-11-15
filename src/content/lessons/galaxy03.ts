@@ -1,5 +1,5 @@
 // Galaxy 03 · The Archives: collections.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const lists: Lesson = {
   id: 'g03-l01', conceptId: 'archives.1', number: 1, title: 'Lists', minutes: 18, xp: 175, difficulty: 2,

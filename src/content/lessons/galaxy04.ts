@@ -1,5 +1,5 @@
 // Galaxy 04 · The Engine: functions.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const defs: Lesson = {
   id: 'g04-l01', conceptId: 'engine.1', number: 1, title: 'Defining functions', minutes: 18, xp: 175, difficulty: 2,

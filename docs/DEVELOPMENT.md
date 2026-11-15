@@ -62,10 +62,11 @@ tolerance; `bool` never matches `int`. Starting values can use `{ "__set__": [..
 - `engine.ts`: an event log from which XP, levels, streaks, mastery and achievements are derived. Each award key
   pays once, so repeating work never farms XP.
 - `useLearning.ts`: the app's store; apps report events (`exercise`, `quiz`, `lessonDone`, `milestone`,
-  `missionDone`, `ran`) and it decides XP, achievements and celebrations.
+  `missionDone`, `lessonMission`, `ran`) and it decides XP, achievements and celebrations.
 
 Saved keys (IndexedDB `botanica` → `kv`): `settings`, `layout`, `progress`, `progression`, `terminal`,
-`lesson:<id>`, `mission:<id>`. Schema changes go through `MIGRATIONS` in `storage/db.ts`; every loader normalises
+`lesson:<id>`, `mission:<id>`, `lmission:<id>` (an optional lesson mission's code, ticks, hints and attempts;
+kept apart from lesson progress). Schema changes go through `MIGRATIONS` in `storage/db.ts`; every loader normalises
 old or hand-edited data.
 
 ## Offline

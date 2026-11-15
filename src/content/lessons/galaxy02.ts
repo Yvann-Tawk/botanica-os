@@ -1,5 +1,5 @@
 // Galaxy 02 · The Flow: decisions and repetition.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const bools: Lesson = {
   id: 'g02-l01', conceptId: 'flow.1', number: 1, title: 'Booleans & comparisons', minutes: 15, xp: 150, difficulty: 1,

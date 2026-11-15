@@ -53,7 +53,7 @@ export function Console({ lines, title, onClear, tip, empty, style, inputPrompt,
     <div className="con" style={style}>
       <div className="con-bar"><span>{title}</span><button onClick={onClear}>Clear</button></div>
       <div className="con-body mono scroll-d" ref={body} role="log" aria-live="polite" aria-label="Console output" tabIndex={0}>
-        {!lines.length && empty && <div style={{ color: '#6f7a63' }}>{empty}</div>}
+        {!lines.length && empty && <div style={{ color: '#8e9584' }}>{empty}</div>}
         {lines.map((o, i) => <div className="con-ln" key={i} style={{ color: CON[o.k] }}>{o.s}</div>)}
         {tip && <div className="con-tip"><b style={{ fontFamily: "'Young Serif', Georgia, serif", fontWeight: 400 }}>Sprout reads the traceback:</b> {tip}</div>}
       </div>

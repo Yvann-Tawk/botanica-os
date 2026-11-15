@@ -36,7 +36,7 @@ export function normalizeLessonState(raw: unknown): LessonState {
   const arr = (v: unknown) => (Array.isArray(v) ? v.map(bool) : null);
   return {
     v: 1,
-    stage: num(r.stage, 4),
+    stage: num(r.stage, 6), // 0–4 the five stages, 5 recap, 6 optional missions
     code: { experiment: str(r.code?.experiment), practice: str(r.code?.practice), challenge: str(r.code?.challenge) },
     experimentRan: bool(r.experimentRan),
     passed: { practice: bool(r.passed?.practice), challenge: bool(r.passed?.challenge), master: bool(r.passed?.master) },

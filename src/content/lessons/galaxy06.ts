@@ -1,7 +1,7 @@
 // Galaxy 06 · The Network: reaching beyond the program.
 // Files here live in the browser's own in-memory file system (they last until the interpreter restarts).
 // The HTTP lesson reads the app's bundled sample API at /data/forecast.json, so it works offline and stays private.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const files: Lesson = {
   id: 'g06-l01', conceptId: 'network.1', number: 1, title: 'Reading & writing files', minutes: 20, xp: 200, difficulty: 2,

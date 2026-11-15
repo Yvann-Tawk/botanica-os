@@ -1,7 +1,7 @@
 // Galaxy 01 · Origins. Five lessons; the guided project (origins.project) arrives with Missions in Milestone 5.
 // Lesson 03 keeps the prototype's content (jars, star log, oxygen readout, quiz) almost word for word.
 
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const hello: Lesson = {
   id: 'g01-l01', conceptId: 'origins.hello', number: 1, title: 'Hello, Python!',

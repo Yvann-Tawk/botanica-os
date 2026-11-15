@@ -62,6 +62,27 @@ describe('mastery (separate from XP and completion)', () => {
   });
 });
 
+describe('optional lesson missions', () => {
+  it('pay once, and count towards mastery of their own lesson only', () => {
+    let p = EMPTY_PROGRESSION, gained = 0;
+    for (let i = 0; i < 3; i++) { const r = record(p, { type: 'lmission', ref: 'g01-l02-m1', award: 'lm:g01-l02-m1', xp: 15 }); p = r.p; gained += r.gained; }
+    expect(gained).toBe(15);
+    p = record(p, { type: 'lmission', ref: 'g01-l02-m3', award: 'lm:g01-l02-m3', xp: 50 }).p;
+    expect(conceptEvidence(p, 'g01-l02', []).reinforced).toBe(2);
+    expect(conceptEvidence(p, 'g01-l03', []).reinforced).toBe(0);
+  });
+  it('earn the optional patches', () => {
+    const ctx = (progress: Progression) => ({ progress, learning: EMPTY_PROGRESS, missionsDone: [] });
+    const one = record(EMPTY_PROGRESSION, { type: 'lmission', ref: 'g01-l01-m1' }).p;
+    expect(newAchievements(ctx(one)).map((a) => a.id)).toEqual(['curious-seedling']);
+    const bloom = record(one, { type: 'lmission', ref: 'g01-l01-m3' }).p;
+    expect(newAchievements(ctx(bloom)).map((a) => a.id)).toContain('full-bloom');
+    let many = EMPTY_PROGRESSION;
+    for (let i = 0; i < 12; i++) many = record(many, { type: 'lmission', ref: `g0${1 + (i % 4)}-l0${1 + Math.floor(i / 4)}-m1` }).p;
+    expect(newAchievements(ctx(many)).map((a) => a.id)).toContain('green-thumb');
+  });
+});
+
 describe('achievements', () => {
   const ctx = (progress: Progression, completed: Record<string, string> = {}, missions: { id: string; type: string }[] = []) => ({ progress, learning: { ...EMPTY_PROGRESS, completed }, missionsDone: missions });
   const byId = (id: string) => ACHIEVEMENTS.find((a) => a.id === id)!;

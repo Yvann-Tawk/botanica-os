@@ -1,6 +1,6 @@
 // Galaxy 08 · The Expeditions: real-world specialisms, built with the standard library so they run in the browser.
 // (Outside the browser, these ideas continue with pandas, Flask, pygame and scikit-learn; each lesson says so.)
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const data: Lesson = {
   id: 'g08-l01', conceptId: 'expeditions.1', number: 1, title: 'Data with csv & statistics', minutes: 25, xp: 250, difficulty: 3,

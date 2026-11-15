@@ -106,6 +106,18 @@ export function useLearning(o: { kv: KV; demo: boolean; initialProgress: Progres
     apply([{ type: 'mission', ref: m.id, award: `mission:${m.id}`, xp: m.xp }], next);
   }, [apply, completeConcept]);
 
+  /** An optional lesson mission was submitted. Pays its XP the first time it passes; returns true on that first pass. */
+  const lessonMission = useCallback((m: { id: string; xpReward: number }, ok: boolean, hints: number): boolean => {
+    const ref = `lm:${m.id}`, events = gRef.current.events;
+    if (!ok) { apply([{ type: 'check-fail', ref }]); return false; }
+    const first = !events.some((e) => e.type === 'lmission' && e.ref === m.id);
+    const evs: (Omit<LearnEvent, 'at' | 'xp'> & { xp?: number })[] = [];
+    if (events.some((e) => e.type === 'check-fail' && e.ref === ref) && !events.some((e) => e.type === 'fixed' && e.ref === ref)) evs.push({ type: 'fixed', ref });
+    if (first) evs.push({ type: 'lmission', ref: m.id, award: `lm:${m.id}`, xp: m.xpReward, meta: { hints } });
+    if (evs.length) apply(evs);
+    return first;
+  }, [apply]);
+
   const setPilotName = useCallback((name: string) => {
     const g = { ...gRef.current, pilotName: name.trim().slice(0, 40) };
     gRef.current = g; setProgression(g); save('progression', g);
@@ -137,7 +149,7 @@ export function useLearning(o: { kv: KV; demo: boolean; initialProgress: Progres
   const xp = useMemo(() => totalXP(progression), [progression]);
   const done = useMemo(() => missionsDone(progression), [progression, missionsDone]);
   return { progress, progression, xp, level: levelOf(xp), missionsDone: done, achievements: ACHIEVEMENTS,
-    ran, exercise, quiz, lessonDone, milestone, missionDone, setPilotName, replace };
+    ran, exercise, quiz, lessonDone, milestone, missionDone, lessonMission, setPilotName, replace };
 }
 
 export type Learning = ReturnType<typeof useLearning>;

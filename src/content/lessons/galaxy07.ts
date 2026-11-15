@@ -1,5 +1,5 @@
 // Galaxy 07 · The Frontier: the strange flora at the edge of the language.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const gens: Lesson = {
   id: 'g07-l01', conceptId: 'frontier.1', number: 1, title: 'Iterators & generators', minutes: 22, xp: 225, difficulty: 3,

@@ -1,11 +1,12 @@
 // Academy: the prototype's five-stage lesson window, driven by lesson data and real Python validation.
+// After a lesson is complete, two more views open: its Recap and its three optional missions.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CodeEditor } from '../../editor/CodeEditor';
 import { Console, useConsole } from '../../editor/Console';
 import { hlBlock } from '../../editor/highlight';
 import { conceptById, LESSONS, REGIONS, regionOf } from '../../content/curriculum';
 import { ALL_LESSONS, lessonById } from '../../content/lessons';
-import { STAGES, type Exercise } from '../../content/lessons/types';
+import { STAGES, TIERS, type Exercise, type LessonMission, type StageId } from '../../content/lessons/types';
 import { isAvailable, isDone, regionStatus, type Progress } from '../../progression/progress';
 import { prerequisites } from '../../content/curriculum';
 import { usePythonSession } from '../../runtime/usePython';
@@ -15,6 +16,9 @@ import { JarsFigure } from './JarsFigure';
 import { codeFor, freshState, isLessonComplete, normalizeLessonState, slotForStage, stagesDone, type LessonState } from './lessonState';
 import { Rich } from './rich';
 import { defaultLesson } from './nextLesson';
+import { RecapView } from './RecapView';
+import { MissionsView, freshMission, normalizeMissionState, type MissionState } from './MissionsView';
+import { StageIcon } from './StageIcon';
 
 interface Props {
   kv: KV;
@@ -22,7 +26,7 @@ interface Props {
   /** Lesson requested by the chart or desktop; null = continue where the learner is. */
   route: string | null;
   editorMode: 'auto' | 'simple';
-  learning: Pick<Learning, 'exercise' | 'quiz' | 'lessonDone'>;
+  learning: Pick<Learning, 'exercise' | 'quiz' | 'lessonDone' | 'lessonMission' | 'progression'>;
   onOpenMission: (id: string) => void;
   onSay: (text: string, mood?: 'happy' | 'confused' | 'celebrating') => void;
   onOpenChart: () => void;
@@ -30,6 +34,7 @@ interface Props {
 }
 
 const SAVE_MS = 400;
+const RECAP = 5, MISSIONS = 6; // stage indexes after the five lesson stages
 const pad = (n: number) => String(n).padStart(2, '0');
 
 
@@ -63,6 +68,26 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
   const update = useCallback((f: (s: LessonState) => LessonState) => setStates((all) => ({ ...all, [lessonId]: f(all[lessonId] ?? freshState()) })), [lessonId]);
   const completed = isDone(progress, lesson.conceptId);
 
+  /* ---- optional missions: their own saved state (`lmission:<id>`), separate from lesson progress ---- */
+  const [mstates, setMstates] = useState<Record<string, MissionState>>({});
+  const [msel, setMsel] = useState<string | null>(null);
+  useEffect(() => { setMsel(null); }, [lessonId]);
+  useEffect(() => {
+    let alive = true;
+    for (const m of lesson.missions) {
+      kv.get(`lmission:${m.id}`).catch(() => undefined).then((raw) => { if (alive) setMstates((all) => (all[m.id] ? all : { ...all, [m.id]: normalizeMissionState(raw) })); });
+    }
+    return () => { alive = false; };
+  }, [lesson, kv]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      for (const m of lesson.missions) { const ms = mstates[m.id]; if (ms && (ms.code != null || ms.attempts || ms.hints)) kv.set(`lmission:${m.id}`, ms).catch(() => {}); }
+    }, SAVE_MS);
+    return () => clearTimeout(t);
+  }, [mstates, lesson, kv]);
+  const updateM = useCallback((id: string, f: (s: MissionState) => MissionState) => setMstates((all) => ({ ...all, [id]: f(all[id] ?? freshMission()) })), []);
+  const missionsCompleted = useMemo(() => new Set(learning.progression.events.filter((e) => e.type === 'lmission').map((e) => e.ref!)), [learning.progression]);
+
   // a lesson completes once all three gates have passed; report it exactly once
   const reported = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -71,22 +96,28 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
     learning.lessonDone(lesson);
   }, [st, completed, lessonId, lesson, learning]);
 
-  useEffect(() => { scroller.current?.scrollTo?.({ top: 0 }); }, [st?.stage, lessonId]);
+  useEffect(() => { scroller.current?.scrollTo?.({ top: 0 }); }, [st?.stage, lessonId, msel]);
 
-  const stage = STAGES[st?.stage ?? 0];
-  const slot = slotForStage(stage.id);
-  const code = st ? codeFor(lesson, st, slot) : '';
+  // Recap and Missions open only once the lesson is complete.
+  const stageIdx = st ? (st.stage >= RECAP && !completed ? 4 : st.stage) : 0;
+  const view: StageId | 'recap' | 'missions' = stageIdx === RECAP ? 'recap' : stageIdx === MISSIONS ? 'missions' : STAGES[stageIdx].id;
+  const stageName = view === 'recap' ? 'Recap' : view === 'missions' ? 'Missions' : STAGES[stageIdx].name;
+  const slot = slotForStage(view as StageId);
+  const mission: LessonMission | null = view === 'missions' ? lesson.missions.find((m) => m.id === msel) ?? null : null;
+  const fileName = mission ? 'mission.py' : 'lesson.py';
+  const code = !st ? '' : mission ? mstates[mission.id]?.code ?? mission.starterCode : codeFor(lesson, st, slot);
   const busy = py.status === 'running' || py.status === 'waiting-input';
   const done = st ? stagesDone(st, completed) : [];
   const exampleLines = useMemo(() => hlBlock(lesson.discover.example.replace(/\n+$/, '')), [lesson]);
 
   if (!st) return <div className="wbody" />;
 
-  const go = (i: number) => update((s) => ({ ...s, stage: Math.max(0, Math.min(4, i)) }));
+  const go = (i: number) => update((s) => ({ ...s, stage: Math.max(0, Math.min(completed ? MISSIONS : 4, i)) }));
+  const setCode = (c: string | null) => (mission ? updateM(mission.id, (m) => ({ ...m, code: c })) : update((s) => ({ ...s, code: { ...s.code, [slot]: c } })));
   const run = async () => {
     if (busy) return;
-    const r = await py.run(code, 'lesson.py');
-    if (r && slot === 'experiment') update((s) => ({ ...s, experimentRan: true }));
+    const r = await py.run(code, fileName);
+    if (r && !mission && view !== 'recap' && view !== 'missions' && slot === 'experiment') update((s) => ({ ...s, experimentRan: true }));
     if (r?.error) onSay('Ooh, a traceback. Those are clues. I left a note in the console.', 'confused');
   };
 
@@ -102,6 +133,19 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
     else onSay(`${n} of ${ex.checks.length} checks pass. Look at the ones with an x.`, n ? 'happy' : 'confused');
   };
 
+  const submitMission = async (m: LessonMission) => {
+    if (busy) return;
+    const hintsUsed = mstates[m.id]?.hints ?? 0;
+    const r = await py.check(mstates[m.id]?.code ?? m.starterCode, 'mission.py', { checks: m.checks, inputs: m.inputs ?? [] });
+    if (!r?.report) return;
+    const results = r.report.results, ok = results.every(Boolean), n = results.filter(Boolean).length;
+    updateM(m.id, (s) => ({ ...s, checks: results, attempts: s.attempts + 1 }));
+    const first = learning.lessonMission(m, ok, hintsUsed); // pays XP only on the first pass
+    const tier = TIERS.find((t) => t.tier === m.tier)!.name;
+    if (ok) onSay(first ? `${tier} complete. +${m.xpReward} XP, for curiosity.` : 'Still passes. Practice grows deep roots.', 'celebrating');
+    else onSay(`${n} of ${m.checks.length} mission checks pass. Look at the ones with an x.`, n ? 'happy' : 'confused');
+  };
+
   const submitQuiz = () => {
     const right = lesson.quiz.every((q, i) => st.quiz[i] === q.a);
     learning.quiz(lesson, right, st.attempts.master === 0);
@@ -111,13 +155,18 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
 
   const next = ALL_LESSONS[ALL_LESSONS.indexOf(lesson) + 1];
   const projectAfter = !next || regionOf(next.conceptId) !== region ? region.concepts.find((c) => c.missionId) : undefined;
-  const atEnd = st.stage === 4;
-  const nextLabel = !atEnd ? `Next: ${STAGES[st.stage + 1].name}` : completed ? (projectAfter ? `Next: ${projectAfter.name.replace(/^Project: /, '')}` : next ? `Next lesson: ${next.title}` : 'See it on the chart') : 'Finish the checks to complete';
+  const atEnd = stageIdx === 4;
+  // Where "continue learning" leads: the galaxy's project, the next lesson, or the chart. Never the optional missions.
+  const continueLabel = projectAfter ? `Next: ${projectAfter.name.replace(/^Project: /, '')}` : next ? `Next lesson: ${next.title}` : 'See it on the chart';
+  const continueLearning = () => { if (projectAfter) onOpenMission(projectAfter.missionId!); else if (next) setLessonId(next.id); else onOpenChart(); };
+  const nextLabel = stageIdx < 4 ? `Next: ${STAGES[stageIdx + 1].name}` : atEnd ? (completed ? 'Next: Recap' : 'Finish the checks to complete') : continueLabel;
   const onNext = () => {
-    if (!atEnd) return go(st.stage + 1);
+    if (stageIdx < 4) return go(stageIdx + 1);
     if (!completed) return;
-    if (projectAfter) onOpenMission(projectAfter.missionId!); else if (next) setLessonId(next.id); else onOpenChart();
+    if (atEnd) return go(RECAP);
+    continueLearning();
   };
+  const lessonMissionsDone = lesson.missions.filter((m) => missionsCompleted.has(m.id)).length;
   // Not gated: a lesson can always be read. Say plainly what it builds on, or that its system is still sealed.
   const regionOpen = regionStatus(progress)[REGIONS.indexOf(region)].open;
   const prereqs = conceptById(lesson.conceptId) && !completed && !isAvailable(progress, lesson.conceptId)
@@ -136,13 +185,13 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
                   const ls = LESSONS.filter((l) => l.regionId === r.id && lessonById(l.id));
                   return ls.length ? <optgroup key={r.id} label={`${r.n} · ${r.name}`}>{ls.map((l) => <option key={l.id} value={l.id}>{`Lesson ${pad(l.number)} · ${l.title}${isDone(progress, l.conceptId) ? ' ✓' : ''}`}</option>)}</optgroup> : null;
                 })}
-              </select> › {stage.name}
+              </select> › {stageName}
             </p>
             <h1 className="disp" style={{ margin: 0, fontSize: '28px', lineHeight: 1.1 }}>{lesson.title}</h1>
           </div>
           <ol className="steps" aria-label="Lesson stages">
             {STAGES.map((s, i) => {
-              const cur = i === st.stage, dn = done[i];
+              const cur = i === stageIdx, dn = done[i];
               const c = { bg: dn ? '#345a04' : cur ? '#c95851' : '#f6f2e8', ring: dn ? '#345a04' : cur ? '#242820' : '#9a9f92', fg: dn ? '#f6f2e8' : cur ? '#1a1410' : '#777c70' };
               return (
                 <li key={s.id}>
@@ -154,14 +203,32 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
                 </li>
               );
             })}
+            {([[RECAP, 'Recap', 5, 'the lesson in brief'], [MISSIONS, 'Missions', 6, `optional, ${lessonMissionsDone} of 3 completed`]] as const).map(([idx, name, icon, note]) => {
+              const cur = stageIdx === idx, allDone = idx === MISSIONS && lessonMissionsDone === 3;
+              const c = { bg: allDone ? '#345a04' : cur ? '#c95851' : '#f6f2e8', ring: allDone ? '#345a04' : cur ? '#242820' : '#9a9f92', fg: allDone ? '#f6f2e8' : cur ? '#1a1410' : '#777c70' };
+              return (
+                <li key={name}>
+                  <button className={'step' + (cur ? ' is-cur' : '') + (allDone ? ' is-done' : '')} onClick={() => go(idx)} disabled={!completed} aria-current={cur ? 'step' : undefined}
+                    aria-label={`${name}: ${note}${completed ? '' : ', opens when the lesson is complete'}${cur ? ', current' : ''}`}>
+                    <StageIcon i={icon} {...c} />
+                    <span>{name}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ol>
         </header>
         <div className="ac-split">
           <div className="ac-lesson">
             <div className="scroll" style={{ flex: 1, minHeight: 0 }} ref={scroller} tabIndex={0} role="region" aria-label="Lesson text">
               <div className="ac-inner">
-                <p className="kicker">Stage {st.stage + 1} of 5 · {stage.name}</p>
-                {stage.id === 'discover' && <>
+                {view === 'recap' && <p className="kicker">After the lesson · Recap</p>}
+                {view !== 'recap' && view !== 'missions' && <p className="kicker">Stage {stageIdx + 1} of 5 · {stageName}</p>}
+                {view === 'missions' && !mission && <p className="kicker">After the lesson · Optional missions</p>}
+                {view === 'recap' && <RecapView key={lessonId} lesson={lesson} continueLabel={continueLabel} onContinue={continueLearning} onMissions={() => go(MISSIONS)} missionsDone={lessonMissionsDone} />}
+                {view === 'missions' && <MissionsView lesson={lesson} states={mstates} completed={missionsCompleted} selected={mission} busy={busy}
+                  onSelect={setMsel} onSubmit={submitMission} onHint={(m) => updateM(m.id, (s) => ({ ...s, hints: Math.min(m.hints.length, s.hints + 1) }))} />}
+                {view === 'discover' && <>
                   <h2 className="h2">{lesson.discover.heading}</h2>
                   <p className="lede"><Rich text={lesson.discover.lede} /></p>
                   {!regionOpen && !completed && <div className="hint" role="note">{region.name} is still sealed on your chart: complete {REGIONS[REGIONS.indexOf(region) - 1]?.name} first to open it. You can read and practise here anyway; the chart will catch up.</div>}
@@ -180,18 +247,18 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
                   </>}
                   {lesson.discover.tip && <div className="ftip"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" style={{ flex: 'none' }}><circle cx="9" cy="9" r="6.5" fill="none" stroke="#345a04" strokeWidth="2"></circle><path d="M14 14 L 19.5 19.5" stroke="#345a04" strokeWidth="2.4" strokeLinecap="round"></path></svg><span><Rich text={lesson.discover.tip} /></span></div>}
                 </>}
-                {stage.id === 'experiment' && <>
+                {view === 'experiment' && <>
                   <h2 className="h2">{lesson.experiment.heading}</h2>
                   <p className="lede"><Rich text={lesson.experiment.lede} /></p>
                   <ol className="ac-steps">{lesson.experiment.steps.map((s) => <li key={s}><Rich text={s} /></li>)}</ol>
                   {lesson.experiment.tip && <div className="ftip"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" style={{ flex: 'none' }}><path d="M11 20 V 10" stroke="#345a04" strokeWidth="2" strokeLinecap="round"></path><path d="M11 12 C 6 12, 3 8, 4 4 C 8 4, 11 7, 11 12 Z M11 10 C 15 10, 18 7, 18 3 C 14 3, 11 6, 11 10 Z" fill="#3e6510"></path></svg><span><Rich text={lesson.experiment.tip} /></span></div>}
                 </>}
-                {(stage.id === 'practice' || stage.id === 'challenge') && (
-                  <ExerciseView ex={lesson[stage.id]} which={stage.id} st={st} busy={busy}
-                    onCheck={() => checkExercise(stage.id as 'practice' | 'challenge')}
-                    onHint={() => update((s) => ({ ...s, hints: { ...s.hints, [stage.id]: Math.min(3, s.hints[stage.id as 'practice'] + 1) } }))} />
+                {(view === 'practice' || view === 'challenge') && (
+                  <ExerciseView ex={lesson[view]} which={view} st={st} busy={busy}
+                    onCheck={() => checkExercise(view)}
+                    onHint={() => update((s) => ({ ...s, hints: { ...s.hints, [view]: Math.min(3, s.hints[view] + 1) } }))} />
                 )}
-                {stage.id === 'master' && <>
+                {view === 'master' && <>
                   <h2 className="h2">Prove it to the archive.</h2>
                   <p className="lede">{lesson.quiz.length} questions. Answer them all correctly{st.passed.practice && st.passed.challenge ? ' and ' + region.name + ' grows a new sprout on your chart.' : '. Pass Practice and Challenge as well to complete the lesson.'}</p>
                   {lesson.quiz.map((q, i) => {
@@ -221,7 +288,7 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
               </div>
             </div>
             <div className="ac-nav">
-              <button className="btn" onClick={() => go(st.stage - 1)} disabled={st.stage === 0}>Back</button>
+              <button className="btn" onClick={() => (mission ? setMsel(null) : go(stageIdx - 1))} disabled={stageIdx === 0}>Back</button>
               <button className="btn moss" onClick={onNext} disabled={atEnd && !completed}>{nextLabel}</button>
             </div>
           </div>
@@ -229,18 +296,18 @@ export default function AcademyApp({ kv, progress, route, editorMode, learning, 
           <div className="ac-code">
             <div className="ed">
               <div className="ed-bar">
-                <div className="ed-tab mono"><span className="tdot" style={{ background: '#e2a93b', borderColor: '#0b0f08' }}></span>lesson.py</div>
+                <div className="ed-tab mono"><span className="tdot" style={{ background: '#e2a93b', borderColor: '#0b0f08' }}></span>{fileName}</div>
                 <div className="ed-actions">
-                  <button className="btn-g" onClick={() => update((s) => ({ ...s, code: { ...s.code, [slot]: null } }))} disabled={st.code[slot] == null}>Reset</button>
+                  <button className="btn-g" onClick={() => setCode(null)} disabled={(mission ? mstates[mission.id]?.code : st.code[slot]) == null}>Reset</button>
                   {busy
                     ? <button className="btn-run" onClick={py.stop}><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1" fill="#12180e"></rect></svg>Stop</button>
                     : <button className="btn-run" onClick={run}><svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M1 1 L 9 6 L 1 11 Z" fill="#12180e"></path></svg>Run<span className="kbd">⌘↵</span></button>}
                 </div>
               </div>
-              <CodeEditor key={`${lessonId}:${slot}`} value={code} onChange={(c) => update((s) => ({ ...s, code: { ...s.code, [slot]: c } }))} onRun={run}
-                ariaLabel={`Python code editor for the lesson, ${stage.name}`} mode={editorMode} />
+              <CodeEditor key={`${lessonId}:${mission?.id ?? slot}`} value={code} onChange={setCode} onRun={run}
+                ariaLabel={mission ? `Python code editor for the mission, ${mission.title}` : `Python code editor for the lesson, ${stageName}`} mode={editorMode} />
               <Console lines={con.lines} tip={py.tip} title={`Console · Python ${py.rt.pythonVersion || '3.12'}`} onClear={() => { con.clear(); py.setTip(''); }}
-                empty="Press Run to send lesson.py through the vessel's interpreter." inputPrompt={py.prompt} onInput={py.answer} />
+ empty={`Press Run to send ${fileName} through the vessel's interpreter.`} inputPrompt={py.prompt} onInput={py.answer} />
             </div>
           </div>
         </div>
@@ -285,17 +352,4 @@ function ExerciseView({ ex, which, st, busy, onCheck, onHint }: { ex: Exercise; 
     {ex.hints.slice(0, hints).map((h, i) => <div className="hint" key={i}><b>Hint {i + 1}.</b> <Rich text={h} /></div>)}
     <p className="ac-honest">Checks run on this device. They look at what your program does, so different correct solutions pass. They're here to guide you, not to grade you.</p>
   </>;
-}
-
-function StageIcon({ i, bg, ring, fg }: { i: number; bg: string; ring: string; fg: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="11" fill={bg} stroke={ring} strokeWidth="1.5"></circle>
-      {i === 0 && <ellipse cx="12" cy="14" rx="4" ry="5.2" transform="rotate(-20 12 14)" fill={fg}></ellipse>}
-      {i === 1 && <><path d="M12 18 V 11" stroke={fg} strokeWidth="1.8" strokeLinecap="round"></path><path d="M12 12 C 8 12, 6.5 9, 7 7 C 10 7, 12 9, 12 12 Z" fill={fg}></path></>}
-      {i === 2 && <><path d="M12 18.5 V 8" stroke={fg} strokeWidth="1.8" strokeLinecap="round"></path><path d="M12 13 C 8 13, 6 10, 6.5 8 C 9.5 8, 12 10, 12 13 Z M12 11 C 15.5 11, 17.5 8, 17 6 C 14 6, 12 8, 12 11 Z" fill={fg}></path></>}
-      {i === 3 && <><path d="M12 19 V 12" stroke={fg} strokeWidth="1.8" strokeLinecap="round"></path><path d="M12 13 C 9 12, 8.5 8, 12 5 C 15.5 8, 15 12, 12 13 Z" fill={fg}></path></>}
-      {i === 4 && <><circle cx="12" cy="7.2" r="2.6" fill={fg}></circle><circle cx="16.6" cy="10.6" r="2.6" fill={fg}></circle><circle cx="14.8" cy="16" r="2.6" fill={fg}></circle><circle cx="9.2" cy="16" r="2.6" fill={fg}></circle><circle cx="7.4" cy="10.6" r="2.6" fill={fg}></circle><circle cx="12" cy="12" r="2" fill={bg}></circle></>}
-    </svg>
-  );
 }

@@ -106,7 +106,9 @@ export function conceptEvidence(p: Progression, lessonId: string, reinforcedBy: 
     challenge: !!ch,
     quiz: !!qz,
     independent: !!ch && (ch.meta?.hints ?? 3) <= 1 && !!qz?.meta?.firstTry,
-    reinforced: reinforcedBy.filter((m) => has('mission', m)).length,
+    // board missions that practise the concept, plus this lesson's own optional missions
+    reinforced: reinforcedBy.filter((m) => has('mission', m)).length
+      + new Set(p.events.filter((e) => e.type === 'lmission' && e.ref?.startsWith(`${lessonId}-m`)).map((e) => e.ref)).size,
   };
 }
 export type MasteryLevel = 'new' | 'seen' | 'practised' | 'mastered';
@@ -126,6 +128,8 @@ export function earned(a: Achievement, c: AchievementContext): boolean {
     case 'mission': return c.missionsDone.some((m) => m.id === r.id);
     case 'missions': return c.missionsDone.filter((m) => m.type === r.type).length >= r.count;
     case 'streak': return longestStreak(c.progress) >= r.days;
+    case 'events': return new Set(c.progress.events.filter((e) => e.type === r.event).map((e) => e.ref)).size >= r.count;
+    case 'eventRef': return c.progress.events.some((e) => e.type === r.event && !!e.ref?.endsWith(r.suffix));
   }
 }
 

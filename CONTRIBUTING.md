@@ -54,6 +54,12 @@ Experiment, Practice, Challenge, Master. Text accepts light markup: `` `code` ``
 5. If you add a lesson, also add or update its concept in `src/content/curriculum.ts` (id, title, minutes, XP). The
    content test checks the two agree.
 
+6. **Every lesson also needs a recap and three optional missions** in `src/content/lessons/extras/gNN.ts`, built
+   with the helpers in `extras/build.ts`: 3–5 takeaways, 2+ runnable cheat-sheet snippets, 2–3 common mistakes (what,
+   why, how to avoid), 2–3 self-check questions, then The Seed (easy, +15 XP), The Sprout (medium, +30 XP) and The
+   Bloom (challenging, +50 XP). Use only concepts taught up to that lesson. Add their model solutions and wrong
+   answers to `tests/solutions/mNN.ts`; the content test checks the shape and runs them in real Python.
+
 The available check kinds and their options are documented in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#exercise-checks).
 
 ## Pull requests

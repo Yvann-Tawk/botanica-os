@@ -1,5 +1,5 @@
 // Galaxy 05 · The Machines: object-oriented Python.
-import type { Lesson } from './types';
+import type { LessonCore as Lesson } from './types';
 
 const classes: Lesson = {
   id: 'g05-l01', conceptId: 'machines.1', number: 1, title: 'Classes & objects', minutes: 20, xp: 200, difficulty: 2,

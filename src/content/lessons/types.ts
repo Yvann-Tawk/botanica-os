@@ -44,7 +44,8 @@ export interface QuizQuestion { q: string; opts: string[]; a: number; why: strin
 
 export interface Tag { name: string; color: string; desc: string; examples: string }
 
-export interface Lesson {
+/** The mandatory part of a lesson (five stages). Recap and optional missions are added in `extras/`. */
+export interface LessonCore {
   id: string;
   conceptId: string;
   number: number;
@@ -67,3 +68,46 @@ export const STAGES: { id: StageId; name: string }[] = [
   { id: 'discover', name: 'Discover' }, { id: 'experiment', name: 'Experiment' }, { id: 'practice', name: 'Practice' },
   { id: 'challenge', name: 'Challenge' }, { id: 'master', name: 'Master' },
 ];
+
+/* ---- lesson recap: shown once the lesson is complete, revisitable any time ---- */
+export interface SyntaxExample { label: string; code: string }
+export interface CommonMistake { mistake: string; why: string; fix: string }
+export interface LessonRecap {
+  /** 3–5 short takeaways. */
+  takeaways: string[];
+  /** Short, runnable snippets of the syntax this lesson introduced. */
+  syntaxExamples: SyntaxExample[];
+  /** 2–3 beginner mistakes: what happens, why, and how to avoid it. */
+  commonMistakes: CommonMistake[];
+  /** 2–3 self-assessment questions. Never block progress. */
+  knowledgeChecks: QuizQuestion[];
+}
+
+/* ---- optional lesson missions: exactly three per lesson, never required ---- */
+export type MissionTier = 'seed' | 'sprout' | 'bloom';
+export const TIERS: { tier: MissionTier; name: string; difficulty: 'easy' | 'medium' | 'challenging'; label: string; xp: number }[] = [
+  { tier: 'seed', name: 'The Seed', difficulty: 'easy', label: 'Easy', xp: 15 },
+  { tier: 'sprout', name: 'The Sprout', difficulty: 'medium', label: 'Medium', xp: 30 },
+  { tier: 'bloom', name: 'The Bloom', difficulty: 'challenging', label: 'Challenging', xp: 50 },
+];
+export interface LessonMission {
+  id: string;
+  lessonId: string;
+  tier: MissionTier;
+  difficulty: 'easy' | 'medium' | 'challenging';
+  title: string;
+  description: string;
+  /** The learning objective, in one line. */
+  objective: string;
+  /** Expected behaviour, in plain words. */
+  expected: string;
+  starterCode: string;
+  hints: string[];
+  xpReward: number;
+  /** Lines fed to input() when validating. */
+  inputs?: string[];
+  /** Validation rules: the same behaviour-based checks lessons use. */
+  checks: Check[];
+}
+export interface LessonExtras { recap: LessonRecap; missions: [LessonMission, LessonMission, LessonMission] }
+export type Lesson = LessonCore & LessonExtras;

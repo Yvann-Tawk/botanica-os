@@ -204,7 +204,62 @@ describe('academy', () => {
     // practice 40 + challenge 60 + quiz 30 + lesson 100 + first run 10
     expect(screen.getByText(/240 XP/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Keep exploring' }));
+
+    // The recap opens once the lesson is complete, and its knowledge check never blocks anything.
+    await user.click(within(w).getByRole('button', { name: 'Next: Recap' }));
+    expect(within(w).getByRole('heading', { name: 'What you learned' })).toBeInTheDocument();
+    expect(within(w).getByRole('heading', { name: 'Syntax cheat sheet' })).toBeInTheDocument();
+    expect(within(w).getByRole('heading', { name: 'Common mistakes' })).toBeInTheDocument();
+    await user.click(within(w).getAllByRole('radio')[0]);
+    expect(within(w).getByText(/Each print\(\) call makes one line/)).toBeInTheDocument();
     expect(within(w).getByRole('button', { name: 'Next lesson: Variables' })).toBeEnabled();
+
+    // Optional missions: three cards; XP is paid once; progress is stored apart from the lesson.
+    await user.click(within(w).getByRole('button', { name: 'Explore missions' }));
+    expect(within(w).getAllByText('Not started')).toHaveLength(3);
+    await user.click(within(w).getByRole('button', { name: /Start The Seed/ }));
+    await user.click(within(w).getByRole('button', { name: 'Submit mission' }));
+    expect(await within(w).findAllByText('(not yet)')).toHaveLength(2);
+    expect(screen.getByText(/240 XP/)).toBeInTheDocument();
+    fireEvent.change(within(w).getByLabelText(/code editor for the mission/), { target: { value: 'print("PASS")' } });
+    await user.click(within(w).getByRole('button', { name: 'Submit mission' }));
+    expect(await within(w).findByText(/Completed · \+15 XP earned/)).toBeInTheDocument();
+    expect(screen.getByText(/255 XP/)).toBeInTheDocument();
+    await user.click(within(w).getByRole('button', { name: 'Submit mission' }));
+    await waitFor(async () => expect(((await kv.get('lmission:g01-l01-m1')) as { attempts: number }).attempts).toBe(3));
+    expect(screen.getByText(/255 XP/)).toBeInTheDocument(); // paid once
+    expect(((await kv.get('progression')) as { events: { type: string }[] }).events.filter((e) => e.type === 'lmission')).toHaveLength(1);
+    expect(await kv.get('progress')).toEqual({ v: 1, completed: { 'origins.hello': expect.any(String) } }); // lesson progress untouched
+
+    await user.click(within(w).getByRole('button', { name: /All missions for this lesson/ }));
+    expect(within(w).getByText('Completed')).toBeInTheDocument();
+    expect(within(w).getAllByText('Not started')).toHaveLength(2);
+    await user.click(within(w).getByRole('button', { name: 'Next lesson: Variables' })); // missions never block the next lesson
+    expect(await within(w).findByRole('heading', { name: 'Variables' })).toBeInTheDocument();
+  }));
+
+  it('recap and missions stay locked until the lesson is complete', async () => withFakePython(async () => {
+    setup('academy');
+    const w = win('Academy');
+    await within(w).findByRole('heading', { name: 'Hello, Python!' });
+    expect(within(w).getByRole('button', { name: /^Recap:.*opens when the lesson is complete/ })).toBeDisabled();
+    expect(within(w).getByRole('button', { name: /^Missions:.*opens when the lesson is complete/ })).toBeDisabled();
+  }));
+
+  it('a completed lesson reopens with its missions and their saved state', async () => withFakePython(async () => {
+    const kv = memoryKV();
+    await kv.set('lmission:g01-l01-m2', { v: 1, code: 'print("draft")', checks: null, hints: 1, attempts: 0 });
+    const user = userEvent.setup();
+    render(<App kv={kv} initialSettings={DEFAULT_SETTINGS} initialShell={initialShell('academy')}
+      initialProgress={{ v: 1, completed: { 'origins.hello': '2026-01-01T00:00:00Z', 'origins.variables': '2026-01-01T00:00:00Z' } }} />);
+    const w = win('Academy');
+    await within(w).findByRole('heading', { name: 'Data types' }); // opens on the next lesson, not on optional missions
+    await user.selectOptions(within(w).getByLabelText('Choose a lesson'), 'g01-l01');
+    await user.click(await within(w).findByRole('button', { name: /^Missions: optional, 0 of 3 completed/ }));
+    expect(await within(w).findByText('In progress')).toBeInTheDocument();
+    await user.click(within(w).getByRole('button', { name: /Continue The Sprout/ }));
+    expect(within(w).getByLabelText(/code editor for the mission/)).toHaveValue('print("draft")');
+    expect(within(w).getByText('Hint 1.')).toBeInTheDocument();
   }));
 
   it('hints are revealed one at a time', async () => withFakePython(async () => {
@@ -258,7 +313,7 @@ describe('missions and logbook', () => {
     const { user, kv } = render2(EMPTY_PROGRESS, 'profile');
     const w = win('Pilot logbook');
     expect(await within(w).findByText('0 of 48 complete · 0 mastered')).toBeInTheDocument();
-    expect(within(w).getByText('0 of 8')).toBeInTheDocument();
+    expect(within(w).getByText('0 of 11')).toBeInTheDocument();
     await user.click(within(w).getByRole('button', { name: /Pilot name: not set/ }));
     await user.type(within(w).getByLabelText('Pilot name'), 'Ada Lovelace{Enter}');
     expect(within(w).getByText('AL')).toBeInTheDocument();
