@@ -193,3 +193,19 @@ tests/windowReducer.test.ts, tests/shell.test.tsx, tests/settings.test.ts
   optional achievements (Curious Seedling, Full Bloom, Green Thumb).
 - **Verified**: 623 unit/integration/content tests (every recap snippet runs; every mission's starter and wrong answers
   fail and model solutions pass, in real Python) and 9 end-to-end tests including the axe scan.
+
+### Terraform OS and the Orbis hub — as delivered (2026-11-15)
+
+Botanica OS became **Terraform OS**: the approved Orbis hub (Claude Design, `reference/terraform-os-orbis-source/`)
+is the new entry point and Botanica is its first world. Branch `feature/terraform-orbis`.
+
+- Orbis ported 1:1 to React (`src/terraform/`, `styles/orbis.css` scoped under `.orbis`), running on the shared
+  window manager (`createShell`) and menu bar.
+- Enter Botanica mounts the existing app, kept alive while in Orbis; Go ▸ Return to Orbis, Back/Forward and
+  `#/botanica` deep links navigate between them.
+- Orbis Journal and the XP pill read the real progress records; settings are shared; Orbis preferences are stored
+  under a new `orbis` key. No schema change, no migration, no reset.
+- Lithic (HTML V2.0, DAX V3.0, Power Query M V4.0), Aether (JavaScript V5.0, CSS V6.0) and Ironworks (C# V7.0,
+  SQL V8.0) are Coming soon previews.
+- Fullscreen across the OS; Sprout no longer speaks unprompted; its bubble never blocks clicks.
+- Details, decisions and limitations: [TERRAFORM.md](TERRAFORM.md).

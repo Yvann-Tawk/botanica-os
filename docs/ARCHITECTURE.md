@@ -1,4 +1,8 @@
-# Botanica OS — Architecture
+# Botanica — Architecture
+
+> Since 2026-11-15 Botanica is the Python world inside **Terraform OS**, opened from the Orbis hub. The shell around
+> it (Orbis, world registry, shared settings and progress, fullscreen, navigation) is described in
+> [TERRAFORM.md](TERRAFORM.md). Everything below still describes Botanica itself, which is unchanged.
 
 This describes the app as built (Milestones 1–7). The working details (runtime, checker reference, storage keys,
 tests) are in [DEVELOPMENT.md](DEVELOPMENT.md); the history and decisions per milestone are in [ROADMAP.md](ROADMAP.md).

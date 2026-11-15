@@ -52,7 +52,7 @@ describe('backup', () => {
     expect(await b.get('settings')).toEqual({ motion: 'reduce' });
   });
   it('rejects files that are not backups', async () => {
-    await expect(importBackup(memoryKV(), { hello: 1 })).rejects.toThrow(/not a Botanica OS backup/);
+    await expect(importBackup(memoryKV(), { hello: 1 })).rejects.toThrow(/not a Terraform OS \(Botanica\) backup/);
   });
 });
 

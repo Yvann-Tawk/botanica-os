@@ -1,13 +1,16 @@
 import { useRef, type PointerEvent, type ReactNode } from 'react';
-import type { AppDef } from '../content/apps';
+import type { AppId } from '../content/apps';
 import type { Geom, ShellAction, WinState } from './windowReducer';
 
-interface Props {
-  app: AppDef;
+/** What the window chrome shows; Botanica's AppDef and the Orbis app table both fit. */
+export interface WinChrome<Id extends string> { id: Id; name: string; longName: string; sub: string; dot: string }
+
+interface Props<Id extends string> {
+  app: WinChrome<Id>;
   win: WinState;
   g: Geom;
   focused: boolean;
-  dispatch: (a: ShellAction) => void;
+  dispatch: (a: ShellAction<Id>) => void;
   onActivity: () => void;
   /** Ratio of rendered to layout size, for when the stage is CSS-scaled. */
   scale: () => number;
@@ -18,7 +21,7 @@ interface Props {
 
 type Drag = { mode: 'move' | 'size'; sx: number; sy: number; ox: number; oy: number; ow: number; oh: number; k: number };
 
-export function Window({ app, win, g, focused, dispatch, onActivity, scale, sub, children }: Props) {
+export function Window<Id extends string = AppId>({ app, win, g, focused, dispatch, onActivity, scale, sub, children }: Props<Id>) {
   const drag = useRef<Drag | null>(null);
   const visible = win.open && !win.min;
   const cls = ['win', visible ? 'is-open' : 'is-hidden', g.max ? 'is-max' : '', focused ? '' : 'is-blur'].join(' ');

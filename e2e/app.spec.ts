@@ -128,8 +128,15 @@ test('keyboard only: reach the dock, open a window, use a menu, and Escape out',
 
 async function solveInAcademy(page: Page, lessonLabel: RegExp, code: string) {
   // Use the plain editor so the test can type exactly (Monaco auto-closes brackets).
+  const simple = 'Simple editor everywhere (lighter, plain text area)';
   await page.goto('/?start=settings');
-  await win(page, 'Settings').getByLabel('Simple editor everywhere (lighter, plain text area)').check();
+  await win(page, 'Settings').getByLabel(simple).check();
+  // The setting saves asynchronously; navigating before the write lands loses it and leaves Monaco auto-indenting the typed code.
+  await expect.poll(() => page.evaluate(() => new Promise((res) => {
+    const o = indexedDB.open('botanica');
+    o.onsuccess = () => { const g = o.result.transaction('kv').objectStore('kv').get('settings'); g.onsuccess = () => res(g.result?.editor); };
+    o.onerror = () => res(null);
+  }))).toBe('simple');
   await page.goto('/?start=academy');
   const a = win(page, 'Academy');
   const picker = a.getByLabel('Choose a lesson');
@@ -153,4 +160,48 @@ test('async & await runs for real in the browser (stack switching)', async ({ pa
   const a = await solveInAcademy(page, /async & await/, 'import asyncio\n\nbays = ["B1", "B2", "B3"]\n\nasync def water(bay):\n    await asyncio.sleep(0.1)\n    return f"{bay} watered"\n\nasync def main():\n    return await asyncio.gather(*(water(b) for b in bays))\n\nresults = asyncio.run(main())\nprint(results)\n');
   await expect(a.getByText('Logged')).toBeVisible({ timeout: 60_000 });
   await expect(a.getByRole('log')).toContainText("['B1 watered', 'B2 watered', 'B3 watered']");
+});
+
+test('Terraform OS opens on Orbis; Botanica launches for real and the learner can come back', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle('Terraform OS');
+  const explorer = win(page, 'Orbis Explorer');
+  await expect(explorer).toHaveClass(/is-open/);
+  await explorer.getByRole('button', { name: /Ironworks/ }).click();
+  await expect(explorer.getByRole('button', { name: 'Coming soon' })).toBeDisabled();
+  await explorer.getByRole('button', { name: /Botanica/ }).first().click();
+  await explorer.getByRole('button', { name: 'Enter Botanica' }).click();
+  await expect(page.getByRole('navigation', { name: 'Seed tray' })).toBeVisible();
+  await expect(page).toHaveURL(/#\/botanica$/);
+  await page.goBack();
+  await expect(win(page, 'Orbis Explorer')).toBeVisible();
+  await page.goForward();
+  await expect(page.getByRole('navigation', { name: 'Seed tray' })).toBeVisible();
+  await page.getByRole('button', { name: 'Go' }).click();
+  await page.getByRole('menuitem', { name: /Return to Orbis/ }).click();
+  await expect(win(page, 'Orbis Explorer')).toBeVisible();
+});
+
+test('fullscreen: Orbis Settings enters and leaves real fullscreen', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Go' }).click();
+  await page.getByRole('menuitem', { name: /Settings/ }).click();
+  const s = win(page, 'Settings');
+  await s.getByRole('button', { name: 'Enter' }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await s.getByRole('button', { name: 'Exit' }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+});
+
+test('accessibility: the Orbis hub has no axe (WCAG 2.1 AA) violations', async ({ page }) => {
+  await page.goto('/');
+  await expect(win(page, 'Orbis Explorer')).toHaveClass(/is-open/);
+  await page.waitForTimeout(800);
+  for (const sel of ['.orbis .mbar', '.orbis .dock', '.orbis .dicons', '.orbis .note', '.orbis section[data-app="orbis"]']) await scan(page, sel);
+  for (const app of ['Journal', 'Settings']) {
+    await page.getByRole('button', { name: 'Go' }).click();
+    await page.getByRole('menuitem', { name: new RegExp(app) }).click();
+    await page.waitForTimeout(800);
+    await scan(page, `.orbis section[data-app="${app.toLowerCase()}"]`);
+  }
 });

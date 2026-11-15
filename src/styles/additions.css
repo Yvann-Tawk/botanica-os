@@ -113,3 +113,6 @@
 .lm-obj{margin:0;font-size:13.5px;line-height:1.45;flex:1}
 .lm-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .lm-foot .btn{min-height:36px;padding:0 12px;font-size:13.5px}
+
+/* Sprout's speech bubble never blocks a click on the window underneath it (Terraform OS). */
+.bubble{pointer-events:none}

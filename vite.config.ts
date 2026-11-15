@@ -17,11 +17,11 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Botanica OS',
-        short_name: 'Botanica',
-        description: 'Learn Python by exploring a botanical cosmos. Runs real Python in your browser.',
-        theme_color: '#efe8d6',
-        background_color: '#efe8d6',
+        name: 'Terraform OS',
+        short_name: 'Terraform',
+        description: 'Learn to code by exploring worlds. Botanica, the Python world, runs real Python in your browser.',
+        theme_color: '#0a1024',
+        background_color: '#0a1024',
         display: 'standalone',
         start_url: '/',
         icons: [

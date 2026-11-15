@@ -6,13 +6,13 @@ export interface Settings {
   motion: 'system' | 'reduce';
   /** What opens on launch. 'restore' brings back the last window layout. */
   openOnStart: 'restore' | 'desktop' | Exclude<AppId, 'settings'>;
-  /** When false, Sprout only speaks when spoken to (petted or asked). */
+  /** When false (the default), Sprout only speaks when spoken to (petted or asked). True adds milestone reactions. */
   sproutChatty: boolean;
   /** 'auto' = Monaco on wide screens; 'simple' = the lightweight editor everywhere. */
   editor: 'auto' | 'simple';
 }
 
-export const DEFAULT_SETTINGS: Settings = { v: 1, motion: 'system', openOnStart: 'restore', sproutChatty: true, editor: 'auto' };
+export const DEFAULT_SETTINGS: Settings = { v: 1, motion: 'system', openOnStart: 'restore', sproutChatty: false, editor: 'auto' };
 
 /** Fills defaults and drops invalid values so older or hand-edited data never breaks the app. */
 export function normalizeSettings(raw: unknown): Settings {

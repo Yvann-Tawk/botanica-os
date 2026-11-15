@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Terraform OS — Orbis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&amp;family=Figtree:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#0a1024}
+a{color:#D6AC68}a:hover{color:#e2b974}
+.os{font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:#242820;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45}
+.os *{box-sizing:border-box}
+.os button{font:inherit;color:inherit}
+.os :focus-visible{outline:2px solid #91DCE8;outline-offset:2px}
+.os ::selection{background:rgba(145,220,232,.42);color:#0e1630}
+.disp{font-family:'Young Serif',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-variant-ligatures:none}
+.scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:#b9b19c transparent}
+.scroll-d{overflow:auto;scrollbar-width:thin;scrollbar-color:#3a4730 transparent}
+
+/* menubar */
+.mbar{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;gap:2px;padding:0 10px;background:#121a33;color:#f4ede0;border-bottom:1.5px solid #c9a86a;z-index:9200}
+.mitem{height:26px;padding:0 10px;border:0;background:none;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:7px;color:#f4ede0}
+.mitem:hover,.mitem.is-on{background:#91DCE8;color:#0e1630}
+.mitem.app{font-weight:700}
+.mright{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;font-weight:500}
+.xp-pill{display:flex;align-items:center;gap:6px;padding:2px 10px;border:1.5px solid #c9a86a;border-radius:999px;background:#1b2447;color:#f4ede0;font-weight:700}
+.menu{position:absolute;top:31px;min-width:230px;background:#141c33;color:#f4ede0;border:1.5px solid #c9a86a;border-radius:10px;box-shadow:4px 6px 0 rgba(5,9,22,.5);padding:6px;z-index:9300;display:flex;flex-direction:column;gap:1px;animation:bubbleIn .14s ease}
+.menu button{display:flex;justify-content:space-between;gap:20px;text-align:left;border:0;background:none;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13.5px;color:#f4ede0}
+.menu button:hover{background:#91DCE8;color:#0e1630}
+.menu .k{color:#9aa7cf;font-family:'JetBrains Mono',monospace;font-size:12px}
+.menu button:hover .k{color:#0e1630}
+.menu hr{border:0;border-top:1px solid rgba(201,168,106,.25);margin:4px 6px}
+.scrim{position:absolute;inset:0;border:0;background:transparent;z-index:9250;cursor:default}
+
+/* desktop */
+.desk{position:absolute;inset:0;overflow:hidden}
+.dicons{position:absolute;left:18px;top:52px;display:grid;grid-template-columns:repeat(1,96px);gap:6px;z-index:2}
+.dicon{width:96px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px 8px;border:0;background:none;cursor:pointer;border-radius:12px}
+.dicon svg{filter:drop-shadow(2px 3px 0 rgba(36,40,32,.22));transition:transform .28s cubic-bezier(.3,1.7,.5,1)}
+.dicon:hover svg{transform:translateY(-4px) rotate(-4deg)}
+.dicon .lbl{font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:5px;color:#f4ede0;background:rgba(18,26,48,.92);border:1px solid rgba(201,168,106,.45)}
+.dicon.is-sel .lbl{background:#91DCE8;color:#0e1630;border-color:#91DCE8}
+.dicon.is-sel svg{transform:translateY(-2px)}
+.note{position:absolute;right:28px;top:58px;width:248px;padding:16px 18px;background:#f6f2e8;border:1.5px solid #242820;border-radius:4px 14px 4px 4px;box-shadow:4px 5px 0 rgba(36,40,32,.14);transform:rotate(1.2deg);z-index:2}
+.note .tape{position:absolute;top:-11px;left:50%;width:76px;height:20px;margin-left:-38px;background:rgba(180,207,182,.85);border:1px solid rgba(36,40,32,.25);transform:rotate(-3deg)}
+
+/* dock */
+.dock{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:flex-end;gap:2px;padding:7px 10px 8px;background:#161e3c;border:1.5px solid #c9a86a;border-radius:18px;box-shadow:4px 6px 0 rgba(5,9,22,.5),inset 0 2px 0 rgba(201,168,106,.14);z-index:9000}
+.dk{position:relative;width:58px;height:60px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:12px;cursor:pointer;transition:transform .22s cubic-bezier(.3,1.7,.5,1)}
+.dk:hover{transform:translateY(-7px)}
+.dk:active{transform:translateY(-2px) scale(.95)}
+.dk svg{filter:drop-shadow(1.5px 2px 0 rgba(36,40,32,.22))}
+.dk .tip{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translate(-50%,4px);opacity:0;pointer-events:none;white-space:nowrap;background:#242820;color:#f6f2e8;font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px;transition:opacity .15s,transform .15s}
+.dk:hover .tip,.dk:focus-visible .tip{opacity:1;transform:translate(-50%,0)}
+.dk .run{position:absolute;bottom:-4px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#c95851;border:1px solid #242820}
+.dsep{width:1.5px;align-self:stretch;background:rgba(201,168,106,.35);margin:6px 8px}
+.pot{position:relative;width:96px;height:60px}
+.sprout-btn{position:absolute;left:-6px;bottom:4px;width:104px;height:92px;border:0;background:none;padding:0;cursor:pointer}
+.bubble{position:absolute;right:-6px;bottom:106px;width:250px;padding:11px 14px 12px;background:#f6f2e8;border:1.5px solid #242820;border-radius:14px 14px 4px 14px;box-shadow:3px 4px 0 rgba(36,40,32,.15);font-size:13.5px;line-height:1.4;animation:bubbleIn .22s cubic-bezier(.2,.8,.2,1);text-wrap:pretty;z-index:9100}
+.bubble .who{display:block;font-family:'Young Serif',Georgia,serif;font-size:13px;color:#1f6f7d;margin-bottom:2px}
+
+/* windows */
+.win{position:absolute;display:flex;flex-direction:column;background:#f6f2e8;border:1.5px solid #c9a86a;border-radius:12px;box-shadow:5px 6px 0 rgba(5,9,22,.55),0 30px 64px -22px rgba(0,0,0,.65);overflow:hidden;transition:opacity .22s cubic-bezier(.2,.8,.2,1),transform .28s cubic-bezier(.2,.9,.2,1),visibility 0s}
+.win.is-hidden{opacity:0;transform:translateY(26px) scale(.94);visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .2s ease,visibility 0s linear .2s}
+.win.is-max{border-radius:0 0 10px 10px;border-top:0;box-shadow:0 10px 30px -10px rgba(36,40,32,.4)}
+.tbar{height:36px;flex:none;display:flex;align-items:center;gap:9px;padding:0 8px 0 9px;border-bottom:1.5px solid #c9a86a;background:#141c33;color:#f4ede0;cursor:grab;user-select:none;touch-action:none}
+.tbar:active{cursor:grabbing}
+.tstripes{flex:1;height:13px;background:repeating-linear-gradient(0deg,rgba(201,168,106,.5) 0 1px,transparent 1px 3px);border-radius:1px;min-width:12px}
+.win.is-blur .tbar{background:#19223d}
+.win.is-blur .tstripes{opacity:.3}
+.win.is-blur .ttitle{color:#737ea4}
+.ttitle{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;color:#f4ede0}
+.ttitle .tsub{font-weight:500;color:#9aa7cf}
+.tdot{width:9px;height:9px;border-radius:50%;border:1.5px solid #242820;flex:none}
+.wbtn{width:22px;height:22px;flex:none;display:grid;place-items:center;border:1.5px solid #242820;border-radius:6px;background:#e7dab9;cursor:pointer;padding:0;box-shadow:inset 0 -2px 0 rgba(36,40,32,.14)}
+.wbtn:hover{background:#ffffff}
+.wbtn:active{transform:translateY(1px);box-shadow:none}
+.wbtn.close{border-radius:50%;background:#c95851}
+.wbtn.close:hover{background:#d96b64}
+.wbody{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.rsz{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;z-index:5;background:linear-gradient(135deg,transparent 0 55%,rgba(36,40,32,.35) 55% 60%,transparent 60% 70%,rgba(36,40,32,.35) 70% 75%,transparent 75%)}
+.win.is-max .rsz{display:none}
+
+/* shared controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border:1.5px solid #242820;border-radius:10px;background:#f6f2e8;cursor:pointer;font-weight:600;font-size:14px;box-shadow:0 3px 0 #242820;transition:transform .08s,box-shadow .08s;text-decoration:none;color:#242820}
+.btn:hover{background:#ffffff}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 #242820}
+.btn.pri{background:#c95851;color:#1a1410}
+.btn.pri:hover{background:#d4655e}
+.btn.moss{background:#345a04;color:#f6f2e8}
+.btn.moss:hover{background:#3e6510}
+.btn.sm{min-height:32px;padding:0 12px;font-size:13px;box-shadow:0 2px 0 #242820}
+.btn.sm:active{transform:translateY(2px)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;box-shadow:0 3px 0 #242820}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.sdot{width:8px;height:8px;border-radius:50%}
+/* Orbis Explorer */
+.obx{flex:1;min-height:0;display:flex}
+.obx-list{flex:none;width:290px;background:#eae4d5;border-right:1.5px solid #242820;display:flex;flex-direction:column}
+.obx-lh{padding:14px 16px 10px;border-bottom:1px solid rgba(36,40,32,.14)}
+.obx-lh .disp{font-size:19px}
+.obx-lh .mono{font-size:11px;color:#63685c}
+.obx-rows{flex:1;min-height:0;overflow:auto;padding:12px 12px 14px}
+.wrow{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border:1.5px solid #242820;border-radius:12px;background:#f6f2e8;cursor:pointer;text-align:left;margin-bottom:9px;box-shadow:0 2px 0 rgba(36,40,32,.16);transition:transform .14s,box-shadow .14s}
+.wrow:hover{transform:translateY(-2px);box-shadow:0 4px 0 rgba(36,40,32,.16)}
+.wrow.on{background:#91DCE8;color:#0e1630;border-color:#5fb9cc}
+.wrow:active{transform:translateY(0);box-shadow:0 0 0 rgba(36,40,32,.16)}
+.wrow .wi{width:42px;height:42px;flex:none}
+.wrow .wt{flex:1;min-width:0}
+.wrow .wt b{font-family:'Young Serif',serif;font-weight:400;font-size:16px;display:block;line-height:1.05}
+.wrow .wt span{display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#63685c;margin-top:2px}
+.wrow.on .wt span{color:#1d3f49}
+.wchip{flex:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1.5px solid currentColor}
+.obx-detail{flex:1;min-width:0;overflow:auto;padding:0}
+.plate{position:relative;height:244px;border-bottom:1.5px solid #242820;overflow:hidden;background:#12180e}
+.plate .pframe{position:absolute;inset:12px;border:1px solid rgba(180,207,182,.35);border-radius:6px;pointer-events:none}
+.plate .pnum{position:absolute;left:20px;top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:#e2a93b;z-index:2}
+.plate .pst{position:absolute;right:18px;top:15px;z-index:2}
+.dbody{padding:20px 26px 26px}
+.dbody .dkick{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a6000;margin:0 0 6px}
+.dbody h2{font-family:'Young Serif',serif;font-size:32px;margin:0 0 4px;line-height:1.05}
+.dbody .dtheme{font-size:13.5px;color:#63685c;margin:0 0 16px}
+.dbody p.blurb{font-size:15px;line-height:1.6;margin:0 0 18px;max-width:58ch;text-wrap:pretty}
+.drow{display:flex;gap:12px;padding:11px 0;border-top:1px solid rgba(36,40,32,.15);align-items:baseline}
+.drow:first-of-type{border-top:0}
+.drow .dk2{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#777c70;width:96px;flex:none;padding-top:2px}
+.langs{display:flex;flex-wrap:wrap;gap:7px}
+.langchip{font-family:'JetBrains Mono',monospace;font-size:12px;padding:3px 10px;border:1.5px solid #242820;border-radius:7px;background:#eae4d5}
+.dact{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:22px}
+
+/* Journal (dashboard) */
+.jr{flex:1;min-height:0;overflow:auto;padding:22px 26px}
+.jr-top{display:flex;flex-wrap:wrap;gap:18px;align-items:stretch}
+.card{border:1.5px solid #242820;border-radius:12px;background:#ffffff;box-shadow:3px 4px 0 rgba(36,40,32,.1)}
+.card.cream{background:#eae4d5}
+.jr-cont{flex:1 1 320px;min-width:0;padding:18px 20px}
+.jr-cont .dkick{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a6000;margin:0 0 10px}
+.cont{display:flex;align-items:center;gap:14px}
+.cont .cdisc{width:54px;height:54px;flex:none}
+.cont .cn{font-family:'Young Serif',serif;font-size:20px;line-height:1.05}
+.cont .cm{font-family:'JetBrains Mono',monospace;font-size:12px;color:#63685c;margin-top:2px}
+.prog{height:7px;border-radius:4px;background:rgba(36,40,32,.12);overflow:hidden;margin:14px 0 7px}
+.prog i{display:block;height:100%;background:#345a04;border-radius:4px}
+.jr-ring{flex:0 1 240px;display:flex;align-items:center;gap:16px;padding:18px 20px}
+.jr-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px;margin-top:20px}
+.stat{padding:14px 16px;border:1.5px solid #242820;border-radius:12px;background:#f6f2e8}
+.stat .sv{font-family:'Young Serif',serif;font-size:28px;line-height:1}
+.stat .sl{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#63685c;margin-top:6px}
+.jr-h{font-family:'Young Serif',serif;font-size:18px;margin:26px 0 12px;display:flex;align-items:baseline;justify-content:space-between}
+.jr-h small{font-family:'JetBrains Mono',monospace;font-size:12px;color:#63685c;font-weight:400}
+.achv{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px dashed rgba(36,40,32,.22)}
+.achv:first-of-type{border-top:0}
+.achv .am{width:34px;height:34px;flex:none;border-radius:50%;border:1.5px solid #242820;display:grid;place-items:center;background:#f3e6c4;color:#8a6000}
+.achv .at b{font-size:14px;display:block}
+.achv .at span{font-size:12px;color:#63685c;font-family:'JetBrains Mono',monospace}
+
+/* Settings */
+.setb{flex:1;min-height:0;overflow:auto;padding:20px 26px}
+.setrow{display:flex;align-items:center;gap:16px;padding:15px 0;border-top:1px solid rgba(36,40,32,.14)}
+.setrow:first-of-type{border-top:0}
+.setrow .srt{flex:1}
+.setrow .srt b{font-weight:600;font-size:14px;display:block}
+.setrow .srt span{font-size:12.5px;color:#63685c}
+.toggle{width:50px;height:28px;flex:none;border-radius:999px;border:1.5px solid #242820;background:#eae4d5;cursor:pointer;position:relative;transition:background .18s}
+.toggle.on{background:#91DCE8;border-color:#5fb9cc}
+.toggle i{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:#f6f2e8;border:1.5px solid #242820;transition:transform .18s cubic-bezier(.3,1.3,.5,1)}
+.toggle.on i{transform:translateX(21px)}
+
+/* launch overlay */
+.cele{position:absolute;inset:0;z-index:9500;display:grid;place-items:center;padding:16px;background:rgba(6,10,26,.74);animation:fadeIn .25s ease}
+.cele-card{position:relative;width:min(520px,100%);padding:26px 30px 26px;background:#f6f2e8;border:1.5px solid #242820;border-radius:18px;box-shadow:6px 8px 0 rgba(0,0,0,.3);animation:popIn .5s cubic-bezier(.2,1.4,.4,1);text-align:center}
+
+/* toasts */
+.toasts{position:absolute;top:44px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9400;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 14px;min-width:240px;max-width:340px;background:#141c33;color:#f4ede0;border:1px solid #c9a86a;border-radius:10px;font-size:13.5px;box-shadow:0 12px 32px -10px rgba(0,0,0,.6);animation:toastIn .3s cubic-bezier(.2,.8,.2,1)}
+.toast b{color:#D6AC68}
+
+/* snake */
+.sp-sway{animation:sway 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:30% 100%}
+.sp-blink{animation:blink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.sp-hop{animation:bounce .8s ease-in-out 2;transform-box:fill-box;transform-origin:50% 100%}
+.sp-wiggle{animation:wiggle .6s ease-in-out 3;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-2.5deg)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}65%{transform:translateY(-1px)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}30%{transform:rotate(-5deg)}70%{transform:rotate(5deg)}}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+.twk{animation:twinkle 4s ease-in-out infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.rot{animation:rot 26s linear infinite}
+.rot-s{animation:rot 60s linear infinite reverse}
+.bh-spin{animation:rot 15s linear infinite}
+.bh-spin.fast{animation-duration:3.4s}
+.bh-glow{animation:bhpulse 5s ease-in-out infinite}
+@keyframes bhpulse{0%,100%{opacity:.5}50%{opacity:.9}}
+.bh-star{animation:swallow 1.1s ease-in forwards;transform-box:fill-box;transform-origin:center}
+@keyframes swallow{0%{opacity:0;transform:translate(0,0) scale(1) rotate(0)}25%{opacity:1}100%{opacity:0;transform:translate(-42px,2px) scale(.12) rotate(90deg)}}
+@media (prefers-reduced-motion:reduce){
+.os *,.os *::before,.os *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+.os.rm .sp-sway,.os.rm .sp-blink,.os.rm .sp-hop,.os.rm .sp-wiggle,.os.rm .twk,.os.rm .rot,.os.rm .rot-s,.os.rm .bh-spin,.os.rm .bh-glow,.os.rm .bh-star{animation:none}
+
+@media (max-width:820px){
+.dicons{grid-template-columns:repeat(3,96px);left:50%;transform:translateX(-50%)}
+.note{display:none}
+.obx{flex-direction:column}
+.obx-list{width:100%;max-height:220px;border-right:0;border-bottom:1.5px solid #242820}
+.jr-top{flex-direction:column}
+}
+/*MARKCSS*/
+</style>
+</helmet>
+<div class="os {{rmCls}}" ref="{{rootRef}}" style="position:relative;width:100%;height:{{appH}};min-height:640px;overflow:hidden;background:#efe8d6">
+
+  <!-- DESKTOP WALLPAPER -->
+  <div class="desk" onPointerDown="{{deskDown}}">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none">
+      <defs>
+        <pattern id="wpDots" width="26" height="26" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#9fb0e0" opacity="0.06"></circle></pattern>
+        <radialGradient id="wpNeb" cx="0.72" cy="0.18" r="0.95"><stop offset="0" stop-color="#23345f"></stop><stop offset="0.5" stop-color="#121c3c"></stop><stop offset="1" stop-color="#0a1024"></stop></radialGradient>
+        <clipPath id="wpPlanet"><circle cx="1050" cy="300" r="150"></circle></clipPath>
+        <filter id="wpGrain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+      </defs>
+      <rect width="1440" height="900" fill="#0a1024"></rect>
+      <rect width="1440" height="900" fill="url(#wpNeb)"></rect>
+      <g><sc-for list="{{wallStars}}" as="s" hint-placeholder-count="40"><circle cx="{{s.x}}" cy="{{s.y}}" r="{{s.r}}" fill="{{s.c}}" opacity="{{s.o}}" class="{{s.cls}}"></circle></sc-for></g>
+      <rect width="1440" height="900" fill="url(#wpDots)"></rect>
+      <g fill="none" stroke="#49598c">
+        <circle cx="1050" cy="300" r="210" stroke-opacity="0.5"></circle>
+        <circle cx="1050" cy="300" r="300" stroke-opacity="0.35" stroke-dasharray="2 6"></circle>
+        <circle cx="1050" cy="300" r="420" stroke-opacity="0.3" stroke-dasharray="10 8"></circle>
+      </g>
+      <g font-family="JetBrains Mono, monospace" font-size="11" fill="#91DCE8" fill-opacity="0.6" letter-spacing="1">
+        <text x="1300" y="150">R.A. 04ʰ 12ᵐ</text>
+        <text x="1230" y="840">PLATE I — THE TERRAFORM FIELD</text>
+      </g>
+      <!-- constellation -->
+      <g fill="none" stroke="#91DCE8" stroke-opacity="0.5" stroke-width="1.2" stroke-dasharray="3 4"><path d="M250 150 L310 206 L390 182 L452 250 L540 220"></path></g>
+      <g fill="#D6AC68" stroke="#0a1024" stroke-width="1.4"><circle cx="250" cy="150" r="4"></circle><circle cx="310" cy="206" r="5"></circle><circle cx="390" cy="182" r="3.5"></circle><circle cx="452" cy="250" r="4.5"></circle><circle cx="540" cy="220" r="3.5"></circle></g>
+      <text x="250" y="130" font-family="JetBrains Mono, monospace" font-size="11" fill="#91DCE8" fill-opacity="0.7" letter-spacing="1">α TERRA MINOR</text>
+      <!-- ringed planet -->
+      <path d="M -210 0 A 210 42 0 0 1 210 0" transform="translate(1050 316) rotate(-12)" fill="none" stroke="#242820" stroke-width="11"></path>
+      <path d="M -210 0 A 210 42 0 0 1 210 0" transform="translate(1050 316) rotate(-12)" fill="none" stroke="#b47e00" stroke-width="7"></path>
+      <circle cx="1050" cy="300" r="150" fill="#3c6675" stroke="#0a1024" stroke-width="2"></circle>
+      <g clip-path="url(#wpPlanet)">
+        <path d="M900 250 C 980 234, 1040 266, 1120 248 S 1200 240, 1200 248 L1200 280 C 1120 296, 1040 282, 960 300 S 900 296 900 290 Z" fill="#2f4a12"></path>
+        <path d="M900 330 C 1000 314, 1080 344, 1200 318 L1200 350 C 1080 372, 980 352, 900 366 Z" fill="#2f4a12"></path>
+        <circle cx="1095" cy="332" r="152" fill="#0a1024" opacity="0.4"></circle>
+        <path d="M-210 0 A 210 42 0 0 0 210 0" transform="translate(1050 316) rotate(-12)" fill="none" stroke="#91DCE8" stroke-width="1.5" opacity="0.5"></path>
+      </g>
+      <path d="M -210 0 A 210 42 0 0 0 210 0" transform="translate(1050 316) rotate(-12)" fill="none" stroke="#242820" stroke-width="11"></path>
+      <path d="M -210 0 A 210 42 0 0 0 210 0" transform="translate(1050 316) rotate(-12)" fill="none" stroke="#b47e00" stroke-width="7"></path>
+      <!-- small moon -->
+      <circle cx="1320" cy="150" r="20" fill="#f4ede0" stroke="#0a1024" stroke-width="1.5"></circle>
+      <circle cx="1314" cy="145" r="4" fill="#0a1024" opacity="0.1"></circle>
+      <circle cx="1328" cy="158" r="5" fill="#0a1024" opacity="0.08"></circle>
+      <!-- horizon -->
+      <path d="M0 640 C 200 590, 380 606, 560 640 S 900 700, 1100 652 S 1340 600, 1440 622 L1440 900 L0 900 Z" fill="#172142" stroke="#2a3a66" stroke-width="1.2"></path>
+      <path d="M0 724 C 180 668, 340 690, 520 728 S 860 762, 1060 722 S 1320 684, 1440 702 V900 H0 Z" fill="#111a38" stroke="#243356" stroke-width="1.2"></path>
+      <!-- observatory greenhouse -->
+      <g transform="translate(250 668)">
+        <path d="M-6 -46 L 52 -96" stroke="#242820" stroke-width="5" stroke-linecap="round"></path>
+        <path d="M-6 -46 L 52 -96" stroke="#b47e00" stroke-width="2.5" stroke-linecap="round"></path>
+        <path d="M-46 4 L -46 -22 A 46 40 0 0 1 46 -22 L 46 4 Z" fill="#eae4d5" stroke="#242820" stroke-width="2"></path>
+        <path d="M-30 -48 L -30 4 M0 -62 L 0 4 M30 -48 L 30 4 M-46 -22 L 46 -22" stroke="#242820" stroke-width="1.3" opacity="0.6"></path>
+        <rect x="-56" y="2" width="112" height="16" rx="2" fill="#c95851" stroke="#242820" stroke-width="2"></rect>
+        <rect x="-10" y="-8" width="20" height="12" fill="#f3c766" stroke="#242820" stroke-width="1.5"></rect>
+      </g>
+      <path d="M0 806 C 220 764, 420 792, 640 822 S 1000 846, 1200 808 S 1380 782, 1440 792 V900 H0 Z" fill="#0b1230" stroke="#1c2b50" stroke-width="1.2"></path>
+      <g stroke="#2a3f63" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M120 806 C 118 786, 110 778, 120 762 M120 790 C 108 788, 104 778, 108 772 M120 790 C 132 786, 136 778, 132 770"></path>
+        <path d="M1300 798 C 1298 778, 1290 770, 1300 754 M1300 782 C 1288 780, 1284 770, 1288 764 M1300 782 C 1312 778, 1316 770, 1312 762"></path>
+      </g>
+      <rect width="1440" height="900" filter="url(#wpGrain)" opacity="0.07" style="mix-blend-mode:multiply"></rect>
+    </svg>
+
+    <!-- DESKTOP ICONS -->
+    <div class="dicons">
+      <sc-for list="{{deskIcons}}" as="ic" hint-placeholder-count="4">
+        <button class="dicon {{ic.cls}}" onClick="{{ic.select}}" onDoubleClick="{{ic.open}}" onKeyDown="{{ic.key}}" aria-label="{{ic.aria}}">
+          <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true" style="overflow:visible">
+            <g display="{{ic.dOr}}">
+              <circle cx="32" cy="32" r="24" fill="#345a04" stroke="#242820" stroke-width="2"></circle>
+              <circle cx="32" cy="32" r="24" fill="none" stroke="#b4cfb6" stroke-width="1.4" stroke-dasharray="2 3" transform="scale(.78)" transform-origin="32 32"></circle>
+              <ellipse cx="32" cy="32" rx="26" ry="9" fill="none" stroke="#b47e00" stroke-width="2.4" transform="rotate(-24 32 32)"></ellipse>
+              <path d="M32 18 L35 27.5 L45 27.5 L37 33.5 L40 43 L32 37 L24 43 L27 33.5 L19 27.5 L29 27.5 Z" fill="#f3c766" stroke="#242820" stroke-width="1.4" stroke-linejoin="round"></path>
+              <circle cx="54" cy="20" r="4" fill="#c95851" stroke="#242820" stroke-width="2"></circle>
+            </g>
+            <g display="{{ic.dBo}}">
+              <ellipse cx="32" cy="57" rx="13" ry="3.6" fill="#345a04" stroke="#242820" stroke-width="2"></ellipse>
+              <path d="M32 43 V 55" stroke="#242820" stroke-width="2.6"></path>
+              <path d="M22 47 Q 32 41 42 47" fill="none" stroke="#b47e00" stroke-width="3" stroke-linecap="round"></path>
+              <ellipse cx="32" cy="28" rx="27" ry="10" fill="none" stroke="#242820" stroke-width="1.8" stroke-dasharray="3 3"></ellipse>
+              <circle cx="32" cy="28" r="14" fill="#b4cfb6" stroke="#242820" stroke-width="2"></circle>
+              <path d="M19 25 Q 32 20 45 25" fill="none" stroke="#3e6510" stroke-width="2.6"></path>
+              <path d="M11 31 Q 32 41 53 31" fill="none" stroke="#242820" stroke-width="5.5" stroke-linecap="round"></path>
+              <path d="M11 31 Q 32 41 53 31" fill="none" stroke="#b47e00" stroke-width="3" stroke-linecap="round"></path>
+              <circle cx="57" cy="24" r="4.5" fill="#c95851" stroke="#242820" stroke-width="2"></circle>
+              <path d="M32 10 C 28 4, 23 4, 20.5 6 C 23.5 10.5, 28 11.5, 32 10 Z" fill="#3e6510" stroke="#242820" stroke-width="1.6" stroke-linejoin="round"></path>
+              <path d="M32 14 V 9" stroke="#242820" stroke-width="1.8"></path>
+            </g>
+            <g display="{{ic.dJo}}">
+              <path d="M12 11 H 48 A 5 5 0 0 1 53 16 V 54 A 2 2 0 0 1 51 56 H 12 Z" fill="#b47e00" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+              <rect x="12" y="11" width="7" height="45" fill="#8a6000" stroke="#242820" stroke-width="2"></rect>
+              <rect x="26" y="18" width="21" height="9" rx="1.5" fill="#f6f2e8" stroke="#242820" stroke-width="1.5"></rect>
+              <path d="M26 34 H47 M26 40 H47 M26 46 H40" stroke="#f6f2e8" stroke-width="1.6" stroke-linecap="round" opacity="0.8"></path>
+              <path d="M42 54 V 62 L 45 59.5 L 48 62 V 54" fill="#c95851" stroke="#242820" stroke-width="1.6" stroke-linejoin="round"></path>
+            </g>
+            <g display="{{ic.dSe}}">
+              <circle cx="32" cy="34" r="20" fill="#eae4d5" stroke="#242820" stroke-width="2"></circle>
+              <g fill="#345a04" stroke="#242820" stroke-width="1.6"><path d="M32 8 L36 14 L28 14 Z"></path><path d="M32 60 L36 54 L28 54 Z"></path><path d="M6 34 L12 38 L12 30 Z"></path><path d="M58 34 L52 38 L52 30 Z"></path><path d="M14 16 L21 18 L16 23 Z"></path><path d="M50 52 L43 50 L48 45 Z"></path><path d="M50 16 L43 18 L48 23 Z"></path><path d="M14 52 L21 50 L16 45 Z"></path></g>
+              <circle cx="32" cy="34" r="9" fill="#b4cfb6" stroke="#242820" stroke-width="2"></circle>
+              <path d="M32 34 C 28 32, 27 27, 32 24 C 37 27, 36 32, 32 34 Z" fill="#3e6510" stroke="#242820" stroke-width="1.2"></path>
+            </g>
+          </svg>
+          <span class="lbl">{{ic.name}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- pinned note -->
+    <div class="note">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="mono" style="margin:0 0 6px;font-size:11.5px;color:#8a6000">Terraform OS · bulletin</p>
+      <p class="disp" style="margin:0 0 4px;font-size:20px;line-height:1.15">Four worlds charted</p>
+      <p style="margin:0 0 14px;font-size:13px;color:#63685c">Botanica is open. Lithic, Aether &amp; Ironworks are terraforming.</p>
+      <button class="btn moss sm" style="width:100%" onClick="{{openOrbis}}">Open Orbis Explorer</button>
+    </div>
+  </div>
+
+  <!-- ORBIS EXPLORER WINDOW -->
+  <section class="win {{wO.cls}}" style="left:{{wO.x}}px;top:{{wO.y}}px;width:{{wO.w}}px;height:{{wO.h}}px;z-index:{{wO.z}}" onPointerDown="{{wO.onFocus}}" aria-label="Orbis Explorer window">
+    <div class="tbar" onPointerDown="{{wO.onDown}}" onPointerMove="{{wO.onMove}}" onPointerUp="{{wO.onUp}}" onDoubleClick="{{wO.onDbl}}">
+      <button class="wbtn close" aria-label="Close Orbis Explorer" onClick="{{wO.close}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.2 2.2 L7.8 7.8 M7.8 2.2 L2.2 7.8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <div class="tstripes"></div>
+      <div class="ttitle"><span class="tdot" style="background:#b47e00"></span><span>Orbis Explorer</span><span class="tsub">World Atlas</span></div>
+      <div class="tstripes"></div>
+      <button class="wbtn" aria-label="Minimize" onClick="{{wO.min}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 7 H 8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <button class="wbtn" aria-label="{{wO.maxLabel}}" onClick="{{wO.max}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="#242820" stroke-width="1.5"></rect><rect x="1.5" y="1.5" width="3.6" height="3.6" fill="#242820"></rect></svg></button>
+    </div>
+    <div class="wbody">
+      <div class="obx">
+        <aside class="obx-list">
+          <div class="obx-lh"><p class="disp" style="margin:0">Destinations</p><p class="mono" style="margin:2px 0 0">4 worlds · 1 open</p></div>
+          <div class="obx-rows scroll">
+            <sc-for list="{{worldsList}}" as="w" hint-placeholder-count="4">
+              <button class="wrow {{w.cls}}" onClick="{{w.pick}}" aria-pressed="{{w.aria}}">
+                <svg class="wi" viewBox="-50 -50 100 100" aria-hidden="true" style="overflow:visible">
+                  <circle r="46" fill="{{w.glow}}" opacity="0.18"></circle>
+                  <g display="{{w.dBot}}"><circle r="30" fill="#3e6510" stroke="#0e2a05" stroke-width="2"></circle><circle cx="10" cy="9" r="31" fill="#0b1f02" opacity="0.26"></circle><path d="M-26 4 C -12 -2, 4 6, 20 0 S 28 -2 28 2 L28 18 C 12 24, 0 16, -14 22 S -26 16 -26 10 Z" fill="#345a04"></path><circle cx="-6" cy="-14" r="4" fill="#c95851"></circle><ellipse rx="40" ry="12" fill="none" stroke="#b4cfb6" stroke-width="1.5" stroke-opacity="0.6" transform="rotate(-18)"></ellipse></g>
+                  <g display="{{w.dLit}}"><circle r="28" fill="#6b5a7a" stroke="#241f2e" stroke-width="2"></circle><circle cx="9" cy="8" r="29" fill="#1c1726" opacity="0.3"></circle><g stroke="#241f2e" stroke-width="1.4" stroke-linejoin="round"><path d="M-6 -30 L4 -36 L10 -20 L0 -12 Z" fill="#b47e00"></path><path d="M-18 -14 L-8 -22 L-2 -4 L-14 2 Z" fill="#8a6000"></path><path d="M8 -16 L18 -20 L22 -2 L10 0 Z" fill="#e2a93b"></path></g></g>
+                  <g display="{{w.dAet}}"><circle r="28" fill="#7fa6b8" stroke="#2b3f4a" stroke-width="2"></circle><circle cx="9" cy="8" r="29" fill="#20323b" opacity="0.26"></circle><path d="M-24 6 C -18 -4, -2 -4, 4 2 C 12 -2, 22 0, 24 8 C 18 16, -20 16, -24 6 Z" fill="#cfe0d8"></path><path d="M-4 2 L-2 -12 L8 -14 L10 0" fill="#3e6510" stroke="#2b3f4a" stroke-width="1"></path><ellipse cx="-12" cy="20" rx="10" ry="3" fill="#f6f2e8" opacity="0.6"></ellipse></g>
+                  <g display="{{w.dIro}}"><circle r="28" fill="#8a7a66" stroke="#241c12" stroke-width="2"></circle><circle cx="9" cy="8" r="29" fill="#241c12" opacity="0.3"></circle><g class="rot" style="transform-origin:-4px -2px"><g transform="translate(-4 -2)" fill="#b49a68" stroke="#241c12" stroke-width="1.2"><circle r="12" fill="#8a743f"></circle><circle r="4" fill="#2b2622"></circle><path d="M0 -16 L3 -16 L2.5 -12 L-2.5 -12 L-3 -16 Z M0 16 L3 16 L2.5 12 L-2.5 12 L-3 16 Z M-16 0 L-16 3 L-12 2.5 L-12 -2.5 L-16 -3 Z M16 0 L16 3 L12 2.5 L12 -2.5 L16 -3 Z"></path></g></g></g>
+                </svg>
+                <span class="wt"><b>{{w.name}}</b><span>{{w.lang}}</span></span>
+                <span class="wchip" style="color:{{w.statusColor}}">{{w.statusShort}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </aside>
+
+        <div class="obx-detail scroll">
+          <div class="plate">
+            <span class="pnum mono">SYSTEM {{dos.n}} / 4</span>
+            <span class="pst"><span class="chip" style="color:{{dos.statusColor}};background:{{dos.statusBg}};border-color:{{dos.statusColor}}"><span class="sdot" style="background:{{dos.statusColor}}"></span>{{dos.statusText}}</span></span>
+            <span class="pframe"></span>
+            <svg viewBox="0 0 640 244" width="100%" height="100%" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+              <rect width="640" height="244" fill="#12180e"></rect>
+              <sc-for list="{{dos.plateStars}}" as="s" hint-placeholder-count="16"><circle cx="{{s.x}}" cy="{{s.y}}" r="{{s.r}}" fill="{{s.c}}" opacity="{{s.o}}" class="{{s.cls}}"></circle></sc-for>
+              <g fill="none" stroke="#33402a" stroke-width="1"><circle cx="430" cy="122" r="120" stroke-dasharray="3 8"></circle><circle cx="430" cy="122" r="170"></circle></g>
+              <g transform="translate(430 122)">
+                <!-- large woodcut world -->
+                <g display="{{dos.dBot}}"><circle r="74" fill="#3e6510" stroke="#0b1f02" stroke-width="3"></circle><circle cx="22" cy="20" r="76" fill="#061502" opacity="0.3"></circle><path d="M-64 10 C -30 -6, 10 18, 48 -4 S 72 -8 72 6 L72 44 C 36 60, 0 36, -36 52 S -64 40 -64 28 Z" fill="#345a04"></path><circle cx="-16" cy="-34" r="8" fill="#c95851" stroke="#0b1f02" stroke-width="1.5"></circle><circle cx="36" cy="38" r="6" fill="#b47e00" stroke="#0b1f02" stroke-width="1.5"></circle><ellipse rx="104" ry="30" fill="none" stroke="#b4cfb6" stroke-width="2.5" stroke-opacity="0.6" transform="rotate(-18)"></ellipse></g>
+                <g display="{{dos.dLit}}"><circle r="70" fill="#6b5a7a" stroke="#1c1726" stroke-width="3"></circle><circle cx="22" cy="20" r="72" fill="#120d1a" opacity="0.32"></circle><g stroke="#1c1726" stroke-width="2" stroke-linejoin="round"><path d="M-14 -70 L10 -84 L24 -48 L0 -30 Z" fill="#b47e00"></path><path d="M-44 -34 L-20 -52 L-6 -8 L-34 6 Z" fill="#8a6000"></path><path d="M18 -42 L44 -54 L52 -6 L24 -2 Z" fill="#e2a93b"></path></g><path d="M-58 28 L-20 44 L16 28 L54 40" fill="none" stroke="#cfe0d8" stroke-width="2" opacity="0.5"></path></g>
+                <g display="{{dos.dAet}}"><circle r="70" fill="#7fa6b8" stroke="#20323b" stroke-width="3"></circle><circle cx="22" cy="20" r="72" fill="#16252c" opacity="0.28"></circle><path d="M-60 14 C -44 -8, -8 -8, 6 4 C 26 -4, 52 0, 56 20 C 44 38, -48 38, -60 14 Z" fill="#cfe0d8"></path><path d="M-12 4 L-8 -34 L20 -36 L24 2" fill="#3e6510" stroke="#20323b" stroke-width="2"></path><path d="M-12 -34 C -12 -46, 20 -46, 20 -36" fill="#4f7a1c"></path><ellipse cx="-30" cy="46" rx="26" ry="6" fill="#f6f2e8" opacity="0.5"></ellipse></g>
+                <g display="{{dos.dIro}}"><circle r="70" fill="#8a7a66" stroke="#241c12" stroke-width="3"></circle><circle cx="22" cy="20" r="72" fill="#140f0a" opacity="0.32"></circle><g class="rot" style="transform-origin:-12px -8px"><g transform="translate(-12 -8)" fill="#b49a68" stroke="#140f0a" stroke-width="2"><circle r="30" fill="#8a743f"></circle><circle r="10" fill="#2b2622"></circle><path d="M0 -38 L6 -38 L5 -30 L-5 -30 L-6 -38 Z M0 38 L6 38 L5 30 L-5 30 L-6 38 Z M-38 0 L-38 6 L-30 5 L-30 -5 L-38 -6 Z M38 0 L38 6 L30 5 L30 -5 L38 -6 Z"></path></g></g><g class="rot-s" style="transform-origin:34px 26px"><g transform="translate(34 26)" fill="#e2a93b" stroke="#140f0a" stroke-width="1.6"><circle r="18" fill="#b47e00"></circle><circle r="6" fill="#2b2622"></circle></g></g></g>
+              </g>
+              <text x="26" y="228" font-family="JetBrains Mono, monospace" font-size="12" fill="#8e9584" letter-spacing="2">FIG. {{dos.n}} — {{dos.figName}}</text>
+            </svg>
+          </div>
+          <div class="dbody">
+            <p class="dkick">Orbis Atlas · {{dos.theme}}</p>
+            <h2>{{dos.name}}</h2>
+            <p class="dtheme">{{dos.sub}}</p>
+            <p class="blurb">{{dos.blurb}}</p>
+            <div class="drow"><span class="dk2">Languages</span><span class="langs"><sc-for list="{{dos.langs}}" as="l" hint-placeholder-count="2"><span class="langchip">{{l.t}}</span></sc-for></span></div>
+            <div class="drow"><span class="dk2">Status</span><span style="font-size:14px">{{dos.statusLong}}</span></div>
+            <div class="drow"><span class="dk2">{{dos.verLabel}}</span><span class="mono" style="font-size:13px">{{dos.version}}</span></div>
+            <div class="dact">
+              <sc-if value="{{dos.available}}" hint-placeholder-val="{{true}}"><button class="btn moss" onClick="{{enterBotanica}}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#f6f2e8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8 H12 M8 3 L13 8 L8 13"></path></svg>Enter Botanica</button></sc-if>
+              <sc-if value="{{dos.soon}}" hint-placeholder-val="{{false}}"><button class="btn" disabled="{{true}}">Coming soon</button><span class="mono" style="font-size:12px;color:#8a6000">Preview only · {{dos.version}}</span></sc-if>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rsz" onPointerDown="{{wO.onRs}}" onPointerMove="{{wO.onMove}}" onPointerUp="{{wO.onUp}}" aria-hidden="true"></div>
+  </section>
+
+  <!-- JOURNAL WINDOW -->
+  <section class="win {{wJ.cls}}" style="left:{{wJ.x}}px;top:{{wJ.y}}px;width:{{wJ.w}}px;height:{{wJ.h}}px;z-index:{{wJ.z}}" onPointerDown="{{wJ.onFocus}}" aria-label="Journal window">
+    <div class="tbar" onPointerDown="{{wJ.onDown}}" onPointerMove="{{wJ.onMove}}" onPointerUp="{{wJ.onUp}}" onDoubleClick="{{wJ.onDbl}}">
+      <button class="wbtn close" aria-label="Close Journal" onClick="{{wJ.close}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.2 2.2 L7.8 7.8 M7.8 2.2 L2.2 7.8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <div class="tstripes"></div>
+      <div class="ttitle"><span class="tdot" style="background:#c95851"></span><span>Journal</span><span class="tsub">Pilot log</span></div>
+      <div class="tstripes"></div>
+      <button class="wbtn" aria-label="Minimize" onClick="{{wJ.min}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 7 H 8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <button class="wbtn" aria-label="{{wJ.maxLabel}}" onClick="{{wJ.max}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="#242820" stroke-width="1.5"></rect><rect x="1.5" y="1.5" width="3.6" height="3.6" fill="#242820"></rect></svg></button>
+    </div>
+    <div class="wbody">
+      <div class="jr scroll">
+        <div class="jr-top">
+          <div class="card cream jr-cont">
+            <p class="dkick">Current world · continue</p>
+            <div class="cont">
+              <svg class="cdisc" viewBox="-30 -30 60 60" aria-hidden="true"><circle r="26" fill="#3e6510" stroke="#0e2a05" stroke-width="2"></circle><circle cx="9" cy="8" r="27" fill="#0b1f02" opacity="0.26"></circle><path d="M-24 4 C -10 -2, 4 6, 18 0 S 26 -2 26 2 L26 16 C 12 20, 0 14, -12 18 S -24 14 -24 10 Z" fill="#345a04"></path><circle cx="-6" cy="-12" r="3" fill="#c95851"></circle><ellipse rx="34" ry="10" fill="none" stroke="#b4cfb6" stroke-width="1.2" stroke-opacity="0.5" transform="rotate(-18)"></ellipse></svg>
+              <div style="min-width:0"><div class="cn disp">Variables &amp; data types</div><div class="cm">Botanica · Origins · Lesson 03</div></div>
+            </div>
+            <div class="prog"><i style="width:40%"></i></div>
+            <p class="mono" style="font-size:11.5px;color:#63685c;margin:0">2 of 5 stages · last opened 2 days ago</p>
+            <div style="margin-top:14px"><button class="btn moss sm" onClick="{{enterBotanica}}">Resume in Botanica</button></div>
+          </div>
+          <div class="card jr-ring">
+            <svg width="110" height="110" viewBox="-60 -60 120 120" role="img" aria-label="{{lvAria}}" style="flex:none">
+              <circle r="46" fill="none" stroke="#d6cdb5" stroke-width="9"></circle>
+              <circle r="46" fill="none" stroke="#b47e00" stroke-width="9" stroke-linecap="round" stroke-dasharray="{{ringDash}}" transform="rotate(-90)"></circle>
+              <text y="-2" text-anchor="middle" font-family="Young Serif, Georgia, serif" font-size="30" fill="#242820">{{lvNum}}</text>
+              <text y="18" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#63685c" letter-spacing="1">LEVEL</text>
+            </svg>
+            <div><div class="disp" style="font-size:26px;line-height:1">{{xpText}} <span style="font-size:15px">XP</span></div><p style="margin:5px 0 0;font-size:12.5px;color:#63685c">{{lvName}} · {{xpNext}}</p></div>
+          </div>
+        </div>
+        <div class="jr-stats">
+          <div class="stat"><div class="sv">{{lessonsDone}}</div><div class="sl">Lessons done</div></div>
+          <div class="stat"><div class="sv">{{missionsDone}}</div><div class="sl">Missions</div></div>
+          <div class="stat"><div class="sv">{{streak}}</div><div class="sl">Day streak</div></div>
+          <div class="stat"><div class="sv">1<span style="font-size:16px;color:#63685c"> / 4</span></div><div class="sl">Worlds open</div></div>
+        </div>
+        <p class="jr-h">Recent marks <small>Botanica</small></p>
+        <sc-for list="{{achievements}}" as="a" hint-placeholder-count="3">
+          <div class="achv"><span class="am"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="{{a.d}}"></path></svg></span><div class="at"><b>{{a.name}}</b><span>{{a.when}}</span></div></div>
+        </sc-for>
+      </div>
+    </div>
+    <div class="rsz" onPointerDown="{{wJ.onRs}}" onPointerMove="{{wJ.onMove}}" onPointerUp="{{wJ.onUp}}" aria-hidden="true"></div>
+  </section>
+
+  <!-- SETTINGS WINDOW -->
+  <section class="win {{wS.cls}}" style="left:{{wS.x}}px;top:{{wS.y}}px;width:{{wS.w}}px;height:{{wS.h}}px;z-index:{{wS.z}}" onPointerDown="{{wS.onFocus}}" aria-label="Settings window">
+    <div class="tbar" onPointerDown="{{wS.onDown}}" onPointerMove="{{wS.onMove}}" onPointerUp="{{wS.onUp}}" onDoubleClick="{{wS.onDbl}}">
+      <button class="wbtn close" aria-label="Close Settings" onClick="{{wS.close}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.2 2.2 L7.8 7.8 M7.8 2.2 L2.2 7.8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <div class="tstripes"></div>
+      <div class="ttitle"><span class="tdot" style="background:#345a04"></span><span>Settings</span><span class="tsub">Terraform OS</span></div>
+      <div class="tstripes"></div>
+      <button class="wbtn" aria-label="Minimize" onClick="{{wS.min}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 7 H 8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <button class="wbtn" aria-label="{{wS.maxLabel}}" onClick="{{wS.max}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="#242820" stroke-width="1.5"></rect><rect x="1.5" y="1.5" width="3.6" height="3.6" fill="#242820"></rect></svg></button>
+    </div>
+    <div class="wbody">
+      <div class="setb scroll">
+        <p class="disp" style="font-size:20px;margin:0 0 2px">Preferences</p>
+        <p class="mono" style="font-size:12px;color:#63685c;margin:0 0 10px">The same panel Botanica uses</p>
+        <div class="setrow"><div class="srt"><b>Fullscreen</b><span>Use the whole screen for Terraform OS</span></div><button class="btn sm" onClick="{{toggleFocus}}">{{focusLabel}}</button></div>
+        <div class="setrow"><div class="srt"><b>Reduce motion</b><span>Still the swaying, drifting and spins</span></div><button class="toggle {{rmT}}" role="switch" aria-checked="{{rmA}}" aria-label="Reduce motion" onClick="{{toggleRm}}"><i></i></button></div>
+        <div class="setrow"><div class="srt"><b>Show companion</b><span>Keep Cygnus in the dock</span></div><button class="toggle {{compT}}" role="switch" aria-checked="{{compA}}" aria-label="Show companion" onClick="{{toggleComp}}"><i></i></button></div>
+        <div class="setrow"><div class="srt"><b>Accretion disk</b><span>Let Cygnus&#39;s disk keep turning</span></div><button class="toggle {{swayT}}" role="switch" aria-checked="{{swayA}}" aria-label="Accretion disk" onClick="{{toggleSway}}"><i></i></button></div>
+      </div>
+    </div>
+    <div class="rsz" onPointerDown="{{wS.onRs}}" onPointerMove="{{wS.onMove}}" onPointerUp="{{wS.onUp}}" aria-hidden="true"></div>
+  </section>
+
+  <!-- MENUBAR -->
+  <div class="mbar">
+    <button class="mitem" aria-label="Terraform menu" onClick="{{menuGo}}">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="11" rx="9" ry="3.4" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(-18 10 11)"></ellipse><circle cx="10" cy="11" r="4.6" fill="#3e6510" stroke="currentColor" stroke-width="1.5"></circle><path d="M10 6.4 C 10 4, 11 2.6, 13 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
+      <span class="disp" style="font-size:15px">Terraform OS</span>
+    </button>
+    <button class="mitem app">{{focusName}}</button>
+    <button class="mitem {{goCls}}" onClick="{{menuGo}}" aria-expanded="{{goAria}}">Go</button>
+    <button class="mitem {{winCls}}" onClick="{{menuWin}}" aria-expanded="{{winAria}}">Window</button>
+    <button class="mitem {{helpCls}}" onClick="{{menuHelp}}" aria-expanded="{{helpAria}}">Help</button>
+    <div class="mright">
+      <span class="xp-pill"><svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0 -6 L 1.4 -1.4 L 6 0 L 1.4 1.4 L 0 6 L -1.4 1.4 L -6 0 L -1.4 -1.4 Z" fill="#b47e00"></path></svg>{{xpText}} XP</span>
+      <span class="mono" style="font-size:12.5px">{{clock}}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button class="scrim" aria-label="Close menu" onClick="{{closeMenu}}"></button></sc-if>
+  <sc-if value="{{isGo}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left:100px">
+      <button onClick="{{openOrbis}}"><span>Orbis Explorer</span><span class="k">⌘1</span></button>
+      <button onClick="{{enterBotanica}}"><span>Botanica</span><span class="k">⌘2</span></button>
+      <button onClick="{{openJournal}}"><span>Journal</span><span class="k">⌘3</span></button>
+      <button onClick="{{openSettings}}"><span>Settings</span><span class="k">⌘,</span></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{isWin}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left:152px">
+      <button onClick="{{tidy}}"><span>Arrange windows</span><span class="k">cascade</span></button>
+      <button onClick="{{minAll}}"><span>Minimize all</span><span class="k">to the dock</span></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{isHelp}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left:224px">
+      <button onClick="{{petSprout}}"><span>Stir Cygnus</span><span class="k">?</span></button>
+      <button onClick="{{closeMenu}}"><span>Drag a window by its title</span><span class="k">move</span></button>
+      <button onClick="{{closeMenu}}"><span>Double-click a title</span><span class="k">maximize</span></button>
+    </div>
+  </sc-if>
+
+  <!-- DOCK + COMPANION -->
+  <nav class="dock" aria-label="Terraform dock">
+    <sc-for list="{{dockItems}}" as="ic" hint-placeholder-count="4">
+      <button class="dk" onClick="{{ic.open}}" aria-label="{{ic.aria}}">
+        <svg viewBox="0 0 64 64" width="44" height="44" aria-hidden="true" style="overflow:visible">
+          <g display="{{ic.dOr}}"><circle cx="32" cy="32" r="24" fill="#345a04" stroke="#242820" stroke-width="2"></circle><ellipse cx="32" cy="32" rx="26" ry="9" fill="none" stroke="#b47e00" stroke-width="2.4" transform="rotate(-24 32 32)"></ellipse><path d="M32 18 L35 27.5 L45 27.5 L37 33.5 L40 43 L32 37 L24 43 L27 33.5 L19 27.5 L29 27.5 Z" fill="#f3c766" stroke="#242820" stroke-width="1.4" stroke-linejoin="round"></path><circle cx="54" cy="20" r="4" fill="#c95851" stroke="#242820" stroke-width="2"></circle></g>
+          <g display="{{ic.dBo}}"><ellipse cx="32" cy="57" rx="13" ry="3.6" fill="#345a04" stroke="#242820" stroke-width="2"></ellipse><path d="M32 43 V 55" stroke="#242820" stroke-width="2.6"></path><ellipse cx="32" cy="28" rx="27" ry="10" fill="none" stroke="#242820" stroke-width="1.8" stroke-dasharray="3 3"></ellipse><circle cx="32" cy="28" r="14" fill="#b4cfb6" stroke="#242820" stroke-width="2"></circle><path d="M19 25 Q 32 20 45 25" fill="none" stroke="#3e6510" stroke-width="2.6"></path><path d="M11 31 Q 32 41 53 31" fill="none" stroke="#242820" stroke-width="5.5" stroke-linecap="round"></path><path d="M11 31 Q 32 41 53 31" fill="none" stroke="#b47e00" stroke-width="3" stroke-linecap="round"></path><circle cx="57" cy="24" r="4.5" fill="#c95851" stroke="#242820" stroke-width="2"></circle><path d="M32 10 C 28 4, 23 4, 20.5 6 C 23.5 10.5, 28 11.5, 32 10 Z" fill="#3e6510" stroke="#242820" stroke-width="1.6" stroke-linejoin="round"></path></g>
+          <g display="{{ic.dJo}}"><path d="M12 11 H 48 A 5 5 0 0 1 53 16 V 54 A 2 2 0 0 1 51 56 H 12 Z" fill="#b47e00" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path><rect x="12" y="11" width="7" height="45" fill="#8a6000" stroke="#242820" stroke-width="2"></rect><rect x="26" y="18" width="21" height="9" rx="1.5" fill="#f6f2e8" stroke="#242820" stroke-width="1.5"></rect><path d="M26 34 H47 M26 40 H47 M26 46 H40" stroke="#f6f2e8" stroke-width="1.6" stroke-linecap="round" opacity="0.8"></path><path d="M42 54 V 62 L 45 59.5 L 48 62 V 54" fill="#c95851" stroke="#242820" stroke-width="1.6" stroke-linejoin="round"></path></g>
+          <g display="{{ic.dSe}}"><circle cx="32" cy="34" r="20" fill="#eae4d5" stroke="#242820" stroke-width="2"></circle><g fill="#345a04" stroke="#242820" stroke-width="1.6"><path d="M32 8 L36 14 L28 14 Z"></path><path d="M32 60 L36 54 L28 54 Z"></path><path d="M6 34 L12 38 L12 30 Z"></path><path d="M58 34 L52 38 L52 30 Z"></path><path d="M14 16 L21 18 L16 23 Z"></path><path d="M50 52 L43 50 L48 45 Z"></path><path d="M50 16 L43 18 L48 23 Z"></path><path d="M14 52 L21 50 L16 45 Z"></path></g><circle cx="32" cy="34" r="9" fill="#b4cfb6" stroke="#242820" stroke-width="2"></circle><path d="M32 34 C 28 32, 27 27, 32 24 C 37 27, 36 32, 32 34 Z" fill="#3e6510" stroke="#242820" stroke-width="1.2"></path></g>
+        </svg>
+        <span class="tip">{{ic.name}}</span>
+        <sc-if value="{{ic.running}}" hint-placeholder-val="{{false}}"><span class="run"></span></sc-if>
+      </button>
+    </sc-for>
+    <span class="dsep" aria-hidden="true"></span>
+    <div class="pot">
+      <sc-if value="{{showComp}}" hint-placeholder-val="{{true}}">
+      <button class="sprout-btn" onClick="{{petSprout}}" aria-label="Stir Cygnus, the hub's black hole">
+        <svg viewBox="0 0 124 108" width="104" height="92" aria-hidden="true" style="overflow:visible;display:block">
+          <ellipse cx="62" cy="99" rx="30" ry="4" fill="#05070e" opacity="0.4"></ellipse>
+          <circle cx="62" cy="50" r="42" fill="#D6AC68" opacity="0.16" class="bh-glow"></circle>
+          <path d="M18 50 A 44 20 0 0 1 106 50" fill="none" stroke="#bfeaf1" stroke-width="2.4" stroke-linecap="round" opacity="0.85"></path>
+          <g transform="rotate(-16 62 50)">
+            <ellipse cx="62" cy="50" rx="50" ry="15" fill="none" stroke="#b86a3a" stroke-width="10"></ellipse>
+            <ellipse cx="62" cy="50" rx="50" ry="15" fill="none" stroke="#f0b35c" stroke-width="5"></ellipse>
+            <g class="{{compSpin}}" style="transform-origin:62px 50px"><ellipse cx="62" cy="50" rx="50" ry="15" fill="none" stroke="#ffe6a6" stroke-width="2" stroke-dasharray="2 10"></ellipse></g>
+          </g>
+          <circle cx="62" cy="50" r="18" fill="#05060d"></circle>
+          <circle cx="62" cy="50" r="18.6" fill="none" stroke="#dff2f6" stroke-width="1.6"></circle>
+          <circle cx="62" cy="50" r="18" fill="#05060d"></circle>
+          <path d="M16 56 Q 62 74 108 52" fill="none" stroke="#f0b35c" stroke-width="6" stroke-linecap="round"></path>
+          <g class="{{compSpin}}" style="transform-origin:62px 50px"><path d="M16 56 Q 62 74 108 52" fill="none" stroke="#ffe6a6" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="2 11"></path></g>
+          <path d="M48 34 Q 62 29 76 34" fill="none" stroke="#f6fbfc" stroke-width="2" stroke-linecap="round"></path>
+          <sc-if value="{{compReact}}" hint-placeholder-val="{{false}}"><g class="bh-star"><path d="M104 38 L106 44 L112 45 L107 49 L109 55 L104 51 L99 55 L101 49 L96 45 L102 44 Z" fill="#91DCE8"></path></g></sc-if>
+        </svg>
+      </button>
+      <sc-if value="{{compBubble}}" hint-placeholder-val="{{false}}"><div class="bubble" role="status"><span class="who">Cygnus</span>{{compLine}}</div></sc-if>
+      </sc-if>
+    </div>
+  </nav>
+
+  <!-- LAUNCH OVERLAY -->
+  <sc-if value="{{launching}}" hint-placeholder-val="{{false}}">
+    <div class="cele" role="dialog" aria-modal="true" aria-label="Entering Botanica">
+      <div class="cele-card">
+        <svg width="150" height="150" viewBox="-70 -70 140 140" aria-hidden="true" style="display:block;margin:0 auto 14px">
+          <circle r="60" fill="none" stroke="#b47e00" stroke-width="2" stroke-dasharray="4 10" class="rot" style="transform-origin:center"></circle>
+          <circle r="34" fill="#3e6510" stroke="#0e2a05" stroke-width="2"></circle>
+          <circle cx="12" cy="10" r="35" fill="#0b1f02" opacity="0.26"></circle>
+          <path d="M-30 4 C -14 -4, 6 8, 24 -2 S 34 -4 34 4 L34 22 C 16 30, 0 18, -16 24 S -30 20 -30 14 Z" fill="#345a04"></path>
+          <circle cx="-8" cy="-16" r="4" fill="#c95851"></circle>
+          <ellipse rx="46" ry="14" fill="none" stroke="#b4cfb6" stroke-width="2" stroke-opacity="0.6" transform="rotate(-18)"></ellipse>
+        </svg>
+        <p class="mono" style="margin:0 0 6px;font-size:12px;color:#8a6000;letter-spacing:.04em">TRANSIT · ORBIS → BOTANICA</p>
+        <p class="disp" style="margin:0 0 10px;font-size:30px">Entering Botanica</p>
+        <p style="margin:0 auto 18px;font-size:14.5px;line-height:1.55;color:#3c4036;max-width:400px">In the full Terraform OS this opens the original Botanica world, exactly as it is — nothing in it changes. Here the passage is simulated.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"><button class="btn pri" onClick="{{closeLaunch}}">Back to Orbis</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TOASTS -->
+  <div class="toasts" aria-live="polite">
+    <sc-for list="{{toasts}}" as="t" hint-placeholder-count="0"><div class="toast"><svg width="15" height="15" viewBox="-8 -8 16 16" aria-hidden="true"><path d="M0 -7 L 1.7 -1.7 L 7 0 L 1.7 1.7 L 0 7 L -1.7 1.7 L -7 0 L -1.7 -1.7 Z" fill="#f3c766"></path></svg><span>{{t.text}}</span></div></sc-for>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"open":{"editor":"enum","options":["orbis","journal","settings","desktop"],"default":"orbis","section":"Prototype"},"world":{"editor":"enum","options":["botanica","lithic","aether","ironworks"],"default":"botanica","section":"Prototype"},"launching":{"editor":"boolean","default":false,"section":"Prototype"},"embedded":{"editor":"boolean","default":false,"section":"Prototype"}}'>
+var WORLDS = [
+  { id: 'botanica', name: 'Botanica', lang: 'Python', langs: ['Python'], status: 'available', color: '#3e6510',
+    theme: 'Botanical', sub: 'Organic · living · grown', figName: 'HORTUS',
+    blurb: 'A living world where Python is cultivated, not just typed — lessons, missions and a companion, grown from seed to specimen. The first and only open world.',
+    version: 'v1.0 · open now', verLabel: 'Release' },
+  { id: 'lithic', name: 'Lithic', lang: 'HTML · DAX · M', langs: ['HTML', 'DAX', 'Power Query M'], status: 'soon', color: '#b47e00',
+    theme: 'Geological', sub: 'Minerals · crystal · strata', figName: 'LITHOS',
+    blurb: 'A world of lattices and veins, where markup and query languages are cut and faceted like gemstones — structure you can see straight through.',
+    version: 'planned · v0.4', verLabel: 'Planned' },
+  { id: 'aether', name: 'Aether', lang: 'JS · CSS', langs: ['JavaScript', 'CSS'], status: 'soon', color: '#7fa6b8',
+    theme: 'Ethereal', sub: 'Floating isles · sky', figName: 'NUBES',
+    blurb: 'Floating islands and sky-civilisations, where behaviour and style lift static pages up into the air and set them moving.',
+    version: 'planned · v0.3', verLabel: 'Planned' },
+  { id: 'ironworks', name: 'Ironworks', lang: 'C# · SQL', langs: ['C#', 'SQL'], status: 'soon', color: '#8a7a66',
+    theme: 'Industrial', sub: 'Mechanical · forged', figName: 'FABRICA',
+    blurb: 'A forged world of gears, furnaces and rails, where typed languages and databases drive the great machines that keep the realm turning.',
+    version: 'planned · v0.2', verLabel: 'Planned' }
+];
+var ACHV = [
+  { name: 'Name-Giver', when: 'Botanica · 2 days ago', d: 'M5 12 L10 17 L19 7' },
+  { name: 'First Light', when: 'Botanica · 5 days ago', d: 'M12 3 V7 M12 17 V21 M3 12 H7 M17 12 H21 M5.6 5.6 L8 8 M16 16 L18.4 18.4 M18.4 5.6 L16 8 M8 16 L5.6 18.4' },
+  { name: 'Six-day streak', when: 'ongoing', d: 'M12 21 C 6 17, 5 11, 8 5 C 9 10, 12 10, 12 5 C 16 8, 17 14, 14 19 Z' }
+];
+var APPS = [
+  { id: 'orbis', name: 'Orbis Explorer', x: 150, y: 58, w: 1040, h: 648, minW: 620 },
+  { id: 'journal', name: 'Journal', x: 250, y: 92, w: 904, h: 616, minW: 560 },
+  { id: 'settings', name: 'Settings', x: 430, y: 140, w: 560, h: 452, minW: 420 }
+];
+var LV_T = [0, 150, 400, 750, 1200, 1800, 2600, 3600, 5000, 7000, 99999];
+var LV_N = ['Spore Cadet', 'Seedling', 'Germinator', 'Sapling Pilot', 'Fern Pilot', 'Canopy Pilot', 'Grove Captain', 'Old-Growth Admiral', 'Starwood Admiral', 'Cosmic Arborist'];
+var SAMPLE = { xp: 1240, lessons: 11, missions: 4, streak: 6 };
+var PETS = ['Careful — I have an appetite for stray photons.', 'Time runs slow this close to me. Take all you need.', 'Botanica is the green world. Enter it before I get hungry.', 'I swallowed a whole star once. Very filling. No regrets.'];
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function fmtN(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function levelOf(xp) { var i = 0; while (i < LV_T.length - 2 && xp >= LV_T[i + 1]) i++; return { n: i + 1, name: LV_N[i], lo: LV_T[i], hi: LV_T[i + 1] }; }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function plateStars(seed) { var r = rng(seed), a = []; for (var i = 0; i < 16; i++) a.push({ x: Math.round(r() * 640), y: Math.round(r() * 244), r: (0.6 + r() * 1.4).toFixed(2), o: (0.3 + r() * 0.6).toFixed(2), c: r() > 0.84 ? '#e2a93b' : '#ece6d6', cls: r() > 0.78 ? 'twk' : '' }); return a; }
+var WALLSTARS = (function () { var r = rng(7), a = []; for (var i = 0; i < 48; i++) { var g = r(); a.push({ x: Math.round(r() * 1440), y: Math.round(r() * 660), r: (0.5 + r() * 1.7).toFixed(2), o: (0.3 + r() * 0.6).toFixed(2), c: g > 0.9 ? '#D6AC68' : (g > 0.78 ? '#91DCE8' : '#f4ede0'), cls: g > 0.8 ? 'twk' : '' }); } return a; })();
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.timers = {};
+    this.rootRef = (el) => { if (!el || el === this.rootEl) return; this.rootEl = el; if (typeof ResizeObserver !== 'undefined') { this.ro = new ResizeObserver(() => this.measure()); this.ro.observe(el); } setTimeout(() => this.measure(), 0); };
+    var open = props.open || 'orbis';
+    this.state = {
+      wins: this.initWins(open), ztop: 20, focus: open === 'desktop' ? null : open,
+      selIcon: null, menu: null, world: props.world || 'botanica',
+      launching: !!props.launching, toasts: [],
+      compMood: 'idle', compBubble: false, compLine: PETS[0], pets: 0,
+      rm: false, showComp: true, sway: true, focusMode: false,
+      W: 1440, H: 900, now: new Date()
+    };
+  }
+  initWins(open) { var w = {}; APPS.forEach(function (a, i) { w[a.id] = { x: a.x, y: a.y, w: a.w, h: a.h, open: a.id === open, min: false, max: false, z: 10 + i }; }); if (open !== 'desktop' && w[open]) w[open].z = 20; return w; }
+  componentDidMount() { this.clockT = setInterval(() => this.setState({ now: new Date() }), 30000); }
+  componentWillUnmount() { clearInterval(this.clockT); Object.keys(this.timers).forEach((k) => clearTimeout(this.timers[k])); if (this.ro) this.ro.disconnect(); }
+  componentDidUpdate(prev) {
+    var p = this.props;
+    if (prev.open !== p.open && p.open) this.setState({ wins: this.initWins(p.open), focus: p.open === 'desktop' ? null : p.open });
+    if (prev.world !== p.world && p.world) this.setState({ world: p.world });
+    if (prev.launching !== p.launching) this.setState({ launching: !!p.launching });
+  }
+  later(key, fn, ms) { clearTimeout(this.timers[key]); this.timers[key] = setTimeout(fn, ms); }
+  measure() { var el = this.rootEl; if (!el) return; var W = el.offsetWidth || 1440, H = el.offsetHeight || 900; if (W !== this.state.W || H !== this.state.H) this.setState({ W: W, H: H }); }
+  scaleK() { var el = this.rootEl; if (!el || !el.offsetWidth) return 1; return el.getBoundingClientRect().width / el.offsetWidth || 1; }
+  toast(text) { var id = Date.now() + Math.random(); this.setState((s) => ({ toasts: s.toasts.concat([{ id: id, text: text }]).slice(-3) })); setTimeout(() => this.setState((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 3600); }
+
+  geom(id) {
+    var st = this.state, w = st.wins[id], W = st.W, H = st.H, top = 34;
+    if (w.max || W < 760) return { x: 0, y: top, w: W, h: Math.max(300, H - top - 92), max: true };
+    var gw = Math.min(w.w, W - 16), gh = Math.min(w.h, H - top - 96);
+    return { x: clamp(w.x, -gw + 140, W - 100), y: clamp(w.y, top, H - 120), w: gw, h: gh, max: false };
+  }
+  focusWin(id) { var st = this.state; if (st.focus === id && st.wins[id].z === st.ztop) return; var z = st.ztop + 1, wins = Object.assign({}, st.wins); wins[id] = Object.assign({}, wins[id], { z: z }); this.setState({ wins: wins, ztop: z, focus: id }); }
+  openApp(id, extra) { var st = this.state, z = st.ztop + 1, wins = Object.assign({}, st.wins); wins[id] = Object.assign({}, wins[id], { open: true, min: false, z: z }, extra || {}); this.setState({ wins: wins, ztop: z, focus: id, menu: null, selIcon: id }); }
+  closeWin(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { open: false, max: false }); this.setState({ wins: wins, focus: this.state.focus === id ? null : this.state.focus }); }
+  minWin(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { min: true }); this.setState({ wins: wins, focus: this.state.focus === id ? null : this.state.focus }); }
+  toggleMax(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { max: !wins[id].max }); this.setState({ wins: wins }); this.focusWin(id); }
+  dragStart(id, mode, e) {
+    if (e.button !== 0) return;
+    if (mode === 'move' && e.target && e.target.closest && e.target.closest('button')) return;
+    var g = this.geom(id); if (g.max && mode === 'move') return;
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+    this.drag = { id: id, mode: mode, sx: e.clientX, sy: e.clientY, ox: g.x, oy: g.y, ow: g.w, oh: g.h, k: this.scaleK() };
+    this.focusWin(id); e.preventDefault();
+  }
+  dragMove(e) {
+    var d = this.drag; if (!d) return;
+    var dx = (e.clientX - d.sx) / d.k, dy = (e.clientY - d.sy) / d.k;
+    var app = APPS.filter(function (a) { return a.id === d.id; })[0];
+    var wins = Object.assign({}, this.state.wins), w = Object.assign({}, wins[d.id]);
+    if (d.mode === 'move') { w.x = Math.round(d.ox + dx); w.y = Math.round(d.oy + dy); }
+    else { w.x = d.ox; w.y = d.oy; w.w = Math.max(app.minW, Math.round(d.ow + dx)); w.h = Math.max(320, Math.round(d.oh + dy)); }
+    wins[d.id] = w; this.setState({ wins: wins });
+  }
+  dragEnd() { this.drag = null; }
+  winVals(id, label) {
+    var st = this.state, w = st.wins[id], g = this.geom(id), visible = w.open && !w.min;
+    var cls = [visible ? 'is-open' : 'is-hidden', g.max ? 'is-max' : '', st.focus === id ? '' : 'is-blur'].join(' ');
+    return { x: g.x, y: g.y, w: g.w, h: g.h, z: w.z, cls: cls, maxLabel: (g.max ? 'Restore ' : 'Maximize ') + label,
+      onFocus: () => this.focusWin(id), onDown: (e) => this.dragStart(id, 'move', e), onMove: (e) => this.dragMove(e), onUp: () => this.dragEnd(),
+      onRs: (e) => this.dragStart(id, 'size', e), onDbl: (e) => { if (e.target && e.target.closest && e.target.closest('button')) return; this.toggleMax(id); },
+      close: () => this.closeWin(id), min: () => this.minWin(id), max: () => this.toggleMax(id) };
+  }
+
+  selectWorld(id) { this.setState({ world: id }); if (!this.state.wins.orbis.open || this.state.wins.orbis.min) this.openApp('orbis'); }
+  enterBotanica() { this.setState({ launching: true, menu: null }); }
+  closeLaunch() { this.setState({ launching: false }); this.toast('Returned to Orbis'); }
+  petSprout() {
+    if (!this.state.showComp) { this.toast('Cygnus is dormant — enable the companion in Settings'); return; }
+    var n = this.state.pets + 1;
+    this.setState({ pets: n, compMood: 'react', compBubble: true, compLine: PETS[Math.min(n - 1, PETS.length - 1)], menu: null });
+    this.later('mood', () => this.setState({ compMood: 'idle' }), 1400);
+    this.later('bub', () => this.setState({ compBubble: false }), 5000);
+  }
+  toggleFocus() {
+    var el = this.rootEl, doc = typeof document !== 'undefined' ? document : null;
+    try { if (doc && !doc.fullscreenElement && el && el.requestFullscreen) { el.requestFullscreen(); this.setState({ focusMode: true }); return; } if (doc && doc.fullscreenElement && doc.exitFullscreen) { doc.exitFullscreen(); this.setState({ focusMode: false }); return; } } catch (x) {}
+    this.setState((s) => ({ focusMode: !s.focusMode })); this.toast(this.state.focusMode ? 'Exited fullscreen' : 'Fullscreen');
+  }
+  snake(mood) {
+    var D = function (b) { return b ? 'inline' : 'none'; };
+    var s = { anim: '', head: '', blink: '', open: 0, happy: 0, smile: 0, blush: 0 };
+    if (mood === 'happy') { s.happy = s.smile = s.blush = 1; s.anim = this.state.sway && !this.state.rm ? 'sp-hop' : ''; }
+    else if (mood === 'petted') { s.happy = s.smile = s.blush = 1; s.anim = this.state.rm ? '' : 'sp-wiggle'; }
+    else { s.open = s.smile = 1; s.anim = (this.state.sway && !this.state.rm) ? 'sp-sway' : ''; s.blink = (this.state.sway && !this.state.rm) ? 'sp-blink' : ''; }
+    return { anim: s.anim, head: s.head, blink: s.blink, open: D(s.open), happy: D(s.happy), smile: D(s.smile), blush: D(s.blush) };
+  }
+
+  renderVals() {
+    var self = this, st = this.state, D = function (b) { return b ? 'inline' : 'none'; };
+    var lv = levelOf(SAMPLE.xp), frac = clamp((SAMPLE.xp - lv.lo) / (lv.hi - lv.lo), 0, 1), circ = 2 * Math.PI * 46;
+
+    var wO = this.winVals('orbis', 'Orbis Explorer'), wJ = this.winVals('journal', 'Journal'), wS = this.winVals('settings', 'Settings');
+
+    var iconMeta = [['orbis', 'Orbis Explorer', 'Or'], ['botanica', 'Botanica', 'Bo'], ['journal', 'Journal', 'Jo'], ['settings', 'Settings', 'Se']];
+    function glyph(k) { return { dOr: D(k === 'Or'), dBo: D(k === 'Bo'), dJo: D(k === 'Jo'), dSe: D(k === 'Se') }; }
+    var deskIcons = iconMeta.map(function (im) {
+      return Object.assign({ name: im[1], aria: 'Open ' + im[1], cls: st.selIcon === im[0] ? 'is-sel' : '',
+        select: function () { self.setState({ selIcon: im[0] }); },
+        open: function () { if (im[0] === 'botanica') self.enterBotanica(); else self.openApp(im[0]); },
+        key: function (e) { if (e.key === 'Enter') { e.preventDefault(); if (im[0] === 'botanica') self.enterBotanica(); else self.openApp(im[0]); } } }, glyph(im[2]));
+    });
+    var dockItems = iconMeta.map(function (im) {
+      var running = im[0] !== 'botanica' && st.wins[im[0]] && st.wins[im[0]].open;
+      return Object.assign({ name: im[1], aria: 'Open ' + im[1], running: running,
+        open: function () { if (im[0] === 'botanica') self.enterBotanica(); else { var w = st.wins[im[0]]; if (w.open && !w.min && st.focus === im[0]) self.minWin(im[0]); else self.openApp(im[0]); } } }, glyph(im[2]));
+    });
+
+    var worldsList = WORLDS.map(function (w) {
+      var on = st.world === w.id, avail = w.status === 'available';
+      return { name: w.name, lang: w.lang, cls: on ? 'on' : '', aria: on ? 'true' : 'false', glow: w.color,
+        statusShort: avail ? 'Open' : 'Soon', statusColor: on ? '#0e1630' : (avail ? '#2f5204' : '#8a6000'),
+        dBot: D(w.id === 'botanica'), dLit: D(w.id === 'lithic'), dAet: D(w.id === 'aether'), dIro: D(w.id === 'ironworks'),
+        pick: function () { self.selectWorld(w.id); } };
+    });
+    var W = WORLDS.filter(function (x) { return x.id === st.world; })[0], avail = W.status === 'available';
+    var dos = { n: WORLDS.indexOf(W) + 1, name: W.name, theme: W.theme, sub: W.sub, blurb: W.blurb, figName: W.figName,
+      langs: W.langs.map(function (t) { return { t: t }; }), version: W.version, verLabel: W.verLabel,
+      available: avail, soon: !avail, statusText: avail ? 'Available' : 'Coming soon',
+      statusLong: avail ? 'Available now — enter any time.' : 'Terraforming · preview only.',
+      statusColor: avail ? '#a6d45f' : '#e2a93b', statusBg: avail ? 'rgba(143,179,86,.2)' : 'rgba(226,169,59,.18)',
+      dBot: D(W.id === 'botanica'), dLit: D(W.id === 'lithic'), dAet: D(W.id === 'aether'), dIro: D(W.id === 'ironworks'),
+      plateStars: plateStars(W.figName.length * 7 + 5) };
+
+    var react = st.compMood === 'react';
+    var d = st.now, days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var clock = days[d.getDay()] + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    var focusApp = APPS.filter(function (a) { return a.id === st.focus; })[0];
+    var menuT = function (k) { return function () { self.setState({ menu: st.menu === k ? null : k }); }; };
+
+    return {
+      rmCls: st.rm ? 'rm' : '', rootRef: this.rootRef, appH: this.props.embedded ? '900px' : '100vh',
+      deskDown: function (e) { if (e.target === e.currentTarget || (e.target.tagName && e.target.tagName.toLowerCase() === 'svg')) self.setState({ selIcon: null }); },
+      deskIcons: deskIcons, dockItems: dockItems, wallStars: WALLSTARS, openOrbis: function () { self.openApp('orbis'); },
+
+      wO: wO, wJ: wJ, wS: wS,
+      worldsList: worldsList, dos: dos,
+      enterBotanica: function () { self.enterBotanica(); },
+
+      /* journal */
+      lvNum: lv.n, lvName: lv.name, lvAria: 'Level ' + lv.n + ', ' + Math.round(frac * 100) + ' percent to the next',
+      ringDash: (circ * frac).toFixed(1) + ' ' + circ.toFixed(1), xpText: fmtN(SAMPLE.xp), xpNext: fmtN(lv.hi - SAMPLE.xp) + ' XP to level ' + (lv.n + 1),
+      lessonsDone: SAMPLE.lessons, missionsDone: SAMPLE.missions, streak: SAMPLE.streak, achievements: ACHV,
+
+      /* menubar + menus */
+      focusName: focusApp ? focusApp.name : 'Desktop',
+      menuOpen: !!st.menu, isGo: st.menu === 'go', isWin: st.menu === 'win', isHelp: st.menu === 'help',
+      goCls: st.menu === 'go' ? 'is-on' : '', winCls: st.menu === 'win' ? 'is-on' : '', helpCls: st.menu === 'help' ? 'is-on' : '',
+      goAria: st.menu === 'go' ? 'true' : 'false', winAria: st.menu === 'win' ? 'true' : 'false', helpAria: st.menu === 'help' ? 'true' : 'false',
+      menuGo: menuT('go'), menuWin: menuT('win'), menuHelp: menuT('help'), closeMenu: function () { self.setState({ menu: null }); },
+      openJournal: function () { self.openApp('journal'); }, openSettings: function () { self.openApp('settings'); },
+      tidy: function () { var wins = Object.assign({}, st.wins), z = st.ztop, n = 0; APPS.forEach(function (a) { if (wins[a.id].open) { z++; wins[a.id] = Object.assign({}, wins[a.id], { x: 140 + n * 40, y: 56 + n * 34, min: false, max: false, z: z }); n++; } }); self.setState({ wins: wins, ztop: z, menu: null }); },
+      minAll: function () { var wins = Object.assign({}, st.wins); APPS.forEach(function (a) { wins[a.id] = Object.assign({}, wins[a.id], { min: true }); }); self.setState({ wins: wins, menu: null, focus: null }); },
+      clock: clock,
+
+      /* dock companion */
+      showComp: st.showComp, compSpin: (st.rm || !st.sway) ? '' : (react ? 'bh-spin fast' : 'bh-spin'), compReact: react && !st.rm,
+      compBubble: st.compBubble, compLine: st.compLine, petSprout: function () { self.petSprout(); },
+
+      /* settings */
+      toggleFocus: function () { self.toggleFocus(); }, focusLabel: st.focusMode ? 'Exit' : 'Enter',
+      rmT: st.rm ? 'on' : '', rmA: st.rm ? 'true' : 'false', toggleRm: function () { self.setState((s) => ({ rm: !s.rm })); },
+      compT: st.showComp ? 'on' : '', compA: st.showComp ? 'true' : 'false', toggleComp: function () { self.setState((s) => ({ showComp: !s.showComp, compBubble: false })); },
+      swayT: st.sway ? 'on' : '', swayA: st.sway ? 'true' : 'false', toggleSway: function () { self.setState((s) => ({ sway: !s.sway })); },
+
+      /* overlays */
+      launching: st.launching, closeLaunch: function () { self.closeLaunch(); }, toasts: st.toasts
+    };
+  }
+}
+</script>
+</body>
+</html>

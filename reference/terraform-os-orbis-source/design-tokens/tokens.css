@@ -1,0 +1,97 @@
+/* ===========================================================================
+   TERRAFORM OS — ORBIS HUB · DESIGN TOKENS
+   Extracted verbatim from the approved prototype (source/project/Main.dc.html).
+   These are the exact values used in the design — do not round or "clean up".
+   =========================================================================== */
+:root {
+  /* --- Space / environment (stellar) --- */
+  --space-void:      #0a1024; /* deepest bg, wallpaper base, shadows */
+  --space-bg:        #101827; /* app ground */
+  --space-chrome:    #121a33; /* menu bar */
+  --space-panel:     #141c33; /* title bars, menus, toasts, dark panels */
+  --space-panel-2:   #19223d; /* blurred/inactive title bar */
+  --space-dock:      #161e3c; /* dock body */
+  --indigo:          #292D50; /* palette indigo (accents, spare) */
+  --indigo-soft:     #1b2447; /* xp pill, insets */
+
+  /* --- Brass / gold (structure & chrome) --- */
+  --gold:            #D6AC68; /* primary brass accent, logos, highlights */
+  --brass-line:      #c9a86a; /* hairline borders on chrome + window frame */
+  --brass-dim:       #b89a5e;
+  --brass-deep:      #8a743f;
+
+  /* --- Celestial cyan (ACTIVE / SELECTED state, system-wide) --- */
+  --cyan:            #91DCE8; /* selection fill, focus ring, active nav */
+  --cyan-bright:     #bfeaf1;
+  --cyan-edge:       #5fb9cc; /* selected border */
+
+  /* --- Warm ivory (window "lit chart" surfaces) --- */
+  --ivory:           #f6f2e8; /* window body (== palette Warm Ivory #F4EDE0) */
+  --ivory-palette:   #F4EDE0; /* brand token */
+  --cream:           #eae4d5; /* sub-panels / sidebars inside windows */
+  --wbtn-face:       #e7dab9; /* brass-ivory window buttons */
+
+  /* --- Ink (text on ivory) --- */
+  --ink:             #242820;
+  --ink-muted:       #63685c;
+
+  /* --- Text on space (navy) --- */
+  --on-space:        #f4ede0;
+  --on-space-muted:  #9aa7cf;
+  --on-space-faint:  #737ea4;
+
+  /* --- Terracotta (close button / destructive / warm accent) --- */
+  --terracotta:      #c95851;
+  --terracotta-ink:  #a8423c;
+
+  /* --- Botanica world colors (RESERVED — only the Botanica world + mascot) --- */
+  --botanica-moss:   #345a04;
+  --botanica-forest: #3e6510;
+  --botanica-sage:   #b4cfb6;
+
+  /* --- Status --- */
+  --status-open:     #2f5204; /* "Open" (ivory rows) */
+  --status-open-lit: #a6d45f; /* "Open" on dark plate header */
+  --status-soon:     #8a6000; /* "Coming soon" (ivory) */
+  --status-soon-lit: #e2a93b; /* "Coming soon" on dark plate header */
+
+  /* --- Black-hole mascot "Cygnus" --- */
+  --cygnus-disk-hot: #f0b35c;
+  --cygnus-disk-warm:#b86a3a;
+  --cygnus-disk-core:#ffe6a6;
+  --cygnus-horizon:  #05060d;
+  --cygnus-photon:   #dff2f6;
+
+  /* --- Typography --- */
+  --font-display: 'Young Serif', Georgia, 'Times New Roman', serif; /* world/app titles */
+  --font-ui:      'Figtree', ui-sans-serif, system-ui, sans-serif;  /* interface */
+  --font-mono:    'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; /* labels, metadata, versions */
+
+  /* --- Radii --- */
+  --r-window: 12px;
+  --r-button: 10px;
+  --r-card:   12px;
+  --r-chip:   999px;
+  --r-small:  6px;
+
+  /* --- Borders --- */
+  --border-hairline: 1.5px;         /* window/chrome frame */
+  --border-ink:      1.5px solid var(--ink); /* tactile controls on ivory */
+
+  /* --- Shadows (hard-offset "sticker" style, inherited from Botanica OS) --- */
+  --shadow-window: 5px 6px 0 rgba(5,9,22,.55), 0 30px 64px -22px rgba(0,0,0,.65);
+  --shadow-dock:   4px 6px 0 rgba(5,9,22,.5), inset 0 2px 0 rgba(201,168,106,.14);
+  --shadow-button: 0 3px 0 var(--ink);      /* presses to 0 on :active */
+  --shadow-card:   3px 4px 0 rgba(36,40,32,.1);
+  --shadow-menu:   4px 6px 0 rgba(5,9,22,.5);
+
+  /* --- Motion --- */
+  --ease-pop:  cubic-bezier(.3,1.7,.5,1);   /* dock bounce, toggles */
+  --ease-soft: cubic-bezier(.2,.8,.2,1);    /* window open, slides */
+  --dur-fast:  .14s;
+  --dur-win:   .28s;
+
+  /* --- Responsive breakpoints --- */
+  --bp-window-maximize: 760px; /* JS geom() force-maximizes windows below this */
+  --bp-desktop:         820px; /* desktop icons reflow, windows/panes stack */
+}

@@ -8,8 +8,11 @@ interface Props {
   menu: MenuKey | null;
   setMenu: (m: MenuKey | null) => void;
   menus: Record<MenuKey, MenuItem[]>;
-  streak: string;
+  /** Omitted in the Orbis hub, which shows XP only. */
+  streak?: string;
   xpText: string;
+  /** The logo menu's label: the world (Botanica) or the OS (Terraform OS). */
+  brand?: string;
   xpCls?: string;
   onActivity: () => void;
 }
@@ -23,7 +26,7 @@ function useClock() {
   return days[now.getDay()] + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 }
 
-export function MenuBar({ focusName, menu, setMenu, menus, streak, xpText, xpCls = '', onActivity }: Props) {
+export function MenuBar({ focusName, menu, setMenu, menus, streak, xpText, xpCls = '', onActivity, brand = 'Botanica' }: Props) {
   const clock = useClock();
   const triggers = useRef<Partial<Record<MenuKey, HTMLButtonElement | null>>>({});
   const toggle = (k: MenuKey) => () => { onActivity(); setMenu(menu === k ? null : k); };
@@ -33,9 +36,9 @@ export function MenuBar({ focusName, menu, setMenu, menus, streak, xpText, xpCls
   return (
     <>
       <div className="mbar">
-        <button className="mitem" aria-label="Botanica menu" aria-haspopup="menu" onClick={toggle('go')}>
+        <button className="mitem" aria-label={`${brand} menu`} aria-haspopup="menu" onClick={toggle('go')}>
           <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="11" rx="9" ry="3.4" fill="none" stroke="currentColor" strokeWidth="1.5" transform="rotate(-18 10 11)"></ellipse><circle cx="10" cy="11" r="4.6" fill="#3e6510" stroke="currentColor" strokeWidth="1.5"></circle><path d="M10 6.4 C 10 4, 11 2.6, 13 2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"></path></svg>
-          <span className="disp" style={{ fontSize: '15px' }}>Botanica</span>
+          <span className="disp" style={{ fontSize: '15px' }}>{brand}</span>
         </button>
         <span className="mitem app">{focusName}</span>
         {(['go', 'win', 'help'] as MenuKey[]).map((k) => (
@@ -44,10 +47,10 @@ export function MenuBar({ focusName, menu, setMenu, menus, streak, xpText, xpCls
           </button>
         ))}
         <div className="mright">
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Learning streak">
+          {streak !== undefined && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title="Learning streak">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15 V 8" stroke="#345a04" strokeWidth="1.6"></path><circle cx="8" cy="5" r="2.2" fill="#c95851"></circle><circle cx="11" cy="6.8" r="2.2" fill="#c95851"></circle><circle cx="5" cy="6.8" r="2.2" fill="#c95851"></circle><circle cx="8" cy="5.9" r="1.4" fill="#f3c766"></circle></svg>
             {streak}
-          </span>
+          </span>}
           <span className={'xp-pill ' + xpCls} key={xpCls}><svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0 -6 L 1.4 -1.4 L 6 0 L 1.4 1.4 L 0 6 L -1.4 1.4 L -6 0 L -1.4 -1.4 Z" fill="#b47e00"></path></svg>{xpText} XP</span>
           <span className="mono" style={{ fontSize: '12.5px' }}>{clock}</span>
         </div>
