@@ -113,7 +113,7 @@ export default function TerraformOS({ kv, place: initialPlace, settings: initial
       {lithicMounted && (
         <div hidden={place !== 'lithic'} {...({ inert: place === 'lithic' ? undefined : '' } as object)}>
           <Suspense fallback={<div className="os" style={{ height: '100vh', background: '#efe8d6' }} />}>
-            <LithicApp progress={learning.progress} xpText={`${journal.xp.toLocaleString('en')} XP`}
+            <LithicApp progress={learning.progress} xpText={journal.xp.toLocaleString('en')}
               active={place === 'lithic'} fullscreen={fullscreen} onToggleFullscreen={toggleFullscreen}
               onExitToOrbis={returnToOrbis} resume={lithicResume} />
           </Suspense>
