@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-16T10:00:00Z"},
+  "title": "Terraform OS — Lithic",
+  "launch": {"view": "focused", "file": "Main.dc.html"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 900, "title": "Lithic — universe home (live)", "expand": "fill", "is_interactive": true},
+    "Desktop.dc.html": {"x": 0, "y": 1140, "w": 1440, "h": 900, "title": "01 Terraform OS desktop — Lithic surface", "is_interactive": true},
+    "Hub.dc.html": {"x": 1520, "y": 1140, "w": 1440, "h": 900, "title": "02 Survey — The Foundation (open)", "is_interactive": true},
+    "Preview.dc.html": {"x": 3040, "y": 1140, "w": 1440, "h": 900, "title": "03 Survey — The Refinery (sealed)", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Desktop.dc.html", "Hub.dc.html", "Preview.dc.html"],
+  "notes": {
+    "corr": {"x": 1520, "y": -60, "w": 470, "fill": "orange", "text": "Design correction — Lithic is now a native Terraform OS world\n\nThe rejected version built a separate OS (slate strip, flex rail, angular panels). This rebuild uses the ACTUAL Botanica OS shell as the source of truth: same warm-paper desktop, menubar, dock, window chrome, tactile buttons, Young Serif / Figtree / JetBrains Mono, and the same pannable world-navigator Botanica uses to move between worlds.\n\nOnly the environment and the three destinations are new. Botanica and Orbis are untouched."},
+    "reuse": {"x": 2010, "y": -60, "w": 470, "fill": "teal", "text": "Reused (shared, unchanged) vs new (world-only)\n\nREUSED verbatim: the entire shell stylesheet — menubar, dock, .win window frames/controls, .btn tactile buttons, the .uv pan/zoom navigator + specimen panel, toasts, mascot rig, type scale, 10–12px radii, 1.5px ink borders, keyframes, reduced-motion + mobile rules. Window-manager (geom/drag/focus) and pan/zoom math are the same code.\n\nNEW (environment only): the geological wallpaper (strata, cut geode, mine headframe, ore crystals), the three dig-site bodies on the chart (Foundation / Crystal Matrix / Refinery), the amethyst + copper world accents, and Flint — the Lithic companion — drawn in the same ink-outline style as Sprout."},
+    "try": {"x": 1520, "y": 600, "w": 470, "fill": "gray", "text": "Try it (press Play on the Main board)\n\nThe Survey window opens on the Lithic chart. Drag to pan, scroll / use the zoom pad, hover a body for a preview, click one to dock its specimen sheet.\n\nThe Foundation (HTML, V2.0) is OPEN and marked “you are here” — “Enter the Foundation” plays a simulated descent (the real HTML academy is Stage 2). The Crystal Matrix (DAX) and The Refinery (Power Query M) are SEALED — preview only, version numbers not dates. “Orbis” (menubar, dock, desktop icon, or the panel) simulates the hand-off back to the hub. Tap Flint for a reading."},
+    "scope": {"x": 2010, "y": 600, "w": 470, "fill": "gray", "text": "Scope\n\nThis is the ONE screen asked for: the Lithic universe home, inside the existing OS. No curriculum, no HTML editor, no lesson/mission/recap screens yet.\n\nReference boards below show the desktop (no window), the Foundation selected, and a sealed-discipline specimen sheet.\n\nStopping here for approval before Stage 2 (The Foundation — HTML academy)."},
+    "refs": {"x": 0, "y": 840, "text": "Reference states — desktop, the Foundation open, a sealed discipline", "kind": "title1", "maxW": 4480}
+  },
+  "designSystems": []
+}

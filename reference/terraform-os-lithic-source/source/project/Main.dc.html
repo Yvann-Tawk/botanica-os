@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Terraform OS — Lithic</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&amp;family=Figtree:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;background:#efe8d6}
+a{color:#3e6510}a:hover{color:#345a04}
+.os{font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;color:#242820;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45}
+.os *{box-sizing:border-box}
+.os button{font:inherit;color:inherit}
+.os :focus-visible{outline:2px solid #c95851;outline-offset:2px}
+.disp{font-family:'Young Serif',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-variant-ligatures:none}
+.scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:#b9b19c transparent}
+.scroll-d{overflow:auto;scrollbar-width:thin;scrollbar-color:#3a4730 transparent}
+
+/* menubar */
+.mbar{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;gap:2px;padding:0 10px;background:#f6f2e8;border-bottom:1.5px solid #242820;z-index:9200}
+.mitem{height:26px;padding:0 10px;border:0;background:none;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:7px}
+.mitem:hover,.mitem.is-on{background:#242820;color:#f6f2e8}
+.mitem.app{font-weight:700}
+.mright{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;font-weight:500}
+.xp-pill{display:flex;align-items:center;gap:6px;padding:2px 10px;border:1.5px solid #242820;border-radius:999px;background:#eae4d5;font-weight:700}
+.xpA{animation:xpA .9s ease}.xpB{animation:xpB .9s ease}
+.menu{position:absolute;top:31px;min-width:230px;background:#f6f2e8;border:1.5px solid #242820;border-radius:10px;box-shadow:4px 5px 0 rgba(36,40,32,.16);padding:6px;z-index:9300;display:flex;flex-direction:column;gap:1px;animation:bubbleIn .14s ease}
+.menu button{display:flex;justify-content:space-between;gap:20px;text-align:left;border:0;background:none;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13.5px}
+.menu button:hover{background:#345a04;color:#f6f2e8}
+.menu .k{color:#63685c;font-family:'JetBrains Mono',monospace;font-size:12px}
+.menu button:hover .k{color:#cfe0d0}
+.menu hr{border:0;border-top:1px solid rgba(36,40,32,.18);margin:4px 6px}
+.scrim{position:absolute;inset:0;border:0;background:transparent;z-index:9250;cursor:default}
+
+/* desktop */
+.desk{position:absolute;inset:0;overflow:hidden}
+.dicons{position:absolute;left:18px;top:52px;display:grid;grid-template-columns:repeat(1,96px);gap:6px;z-index:2}
+.dicon{width:96px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px 8px;border:0;background:none;cursor:pointer;border-radius:12px}
+.dicon svg{filter:drop-shadow(2px 3px 0 rgba(36,40,32,.22));transition:transform .28s cubic-bezier(.3,1.7,.5,1)}
+.dicon:hover svg{transform:translateY(-4px) rotate(-4deg)}
+.dicon .lbl{font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:5px;background:rgba(246,242,232,.92);border:1px solid rgba(36,40,32,.2)}
+.dicon.is-sel .lbl{background:#345a04;color:#f6f2e8;border-color:#345a04}
+.dicon.is-sel svg{transform:translateY(-2px)}
+.note{position:absolute;right:28px;top:58px;width:240px;padding:16px 18px 16px;background:#f6f2e8;border:1.5px solid #242820;border-radius:4px 14px 4px 4px;box-shadow:4px 5px 0 rgba(36,40,32,.14);transform:rotate(1.2deg);z-index:2}
+.note .tape{position:absolute;top:-11px;left:50%;width:76px;height:20px;margin-left:-38px;background:rgba(180,207,182,.85);border:1px solid rgba(36,40,32,.25);transform:rotate(-3deg)}
+
+/* dock */
+.dock{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:flex-end;gap:2px;padding:7px 10px 8px;background:#eae4d5;border:1.5px solid #242820;border-radius:18px;box-shadow:4px 5px 0 rgba(36,40,32,.18),inset 0 2px 0 rgba(255,255,255,.5)}
+.dk{position:relative;width:58px;height:60px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:12px;cursor:pointer;transition:transform .22s cubic-bezier(.3,1.7,.5,1)}
+.dk:hover{transform:translateY(-7px)}
+.dk:active{transform:translateY(-2px) scale(.95)}
+.dk svg{filter:drop-shadow(1.5px 2px 0 rgba(36,40,32,.22))}
+.dk .tip{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translate(-50%,4px);opacity:0;pointer-events:none;white-space:nowrap;background:#242820;color:#f6f2e8;font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px;transition:opacity .15s,transform .15s}
+.dk:hover .tip,.dk:focus-visible .tip{opacity:1;transform:translate(-50%,0)}
+.dk .run{position:absolute;bottom:-4px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#c95851;border:1px solid #242820}
+.dsep{width:1.5px;align-self:stretch;background:rgba(36,40,32,.22);margin:6px 8px}
+.pot{position:relative;width:96px;height:60px}
+.sprout-btn{position:absolute;left:-6px;bottom:4px;width:104px;height:92px;border:0;background:none;padding:0;cursor:pointer}
+.bubble{position:absolute;right:-6px;bottom:106px;width:250px;padding:11px 14px 12px;background:#f6f2e8;border:1.5px solid #242820;border-radius:14px 14px 4px 14px;box-shadow:3px 4px 0 rgba(36,40,32,.15);font-size:13.5px;line-height:1.4;animation:bubbleIn .22s cubic-bezier(.2,.8,.2,1);text-wrap:pretty}
+.bubble .who{display:block;font-family:'Young Serif',Georgia,serif;font-size:13px;color:#3e6510;margin-bottom:2px}
+
+/* windows */
+.win{position:absolute;display:flex;flex-direction:column;background:#f6f2e8;border:1.5px solid #242820;border-radius:12px;box-shadow:5px 6px 0 rgba(36,40,32,.16),0 28px 60px -24px rgba(36,40,32,.5);overflow:hidden;transition:opacity .22s cubic-bezier(.2,.8,.2,1),transform .28s cubic-bezier(.2,.9,.2,1),visibility 0s}
+.win.is-hidden{opacity:0;transform:translateY(26px) scale(.94);visibility:hidden;pointer-events:none;transition:opacity .16s ease,transform .2s ease,visibility 0s linear .2s}
+.win.is-max{border-radius:0 0 10px 10px;border-top:0;box-shadow:0 10px 30px -10px rgba(36,40,32,.4)}
+.tbar{height:36px;flex:none;display:flex;align-items:center;gap:9px;padding:0 8px 0 9px;border-bottom:1.5px solid #242820;background:#eae4d5;cursor:grab;user-select:none;touch-action:none}
+.tbar:active{cursor:grabbing}
+.tstripes{flex:1;height:13px;background:repeating-linear-gradient(0deg,rgba(36,40,32,.24) 0 1px,transparent 1px 3px);border-radius:1px;min-width:12px}
+.win.is-blur .tbar{background:#f1ece0}
+.win.is-blur .tstripes{opacity:.3}
+.win.is-blur .ttitle{color:#63685c}
+.ttitle{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.ttitle .tsub{font-weight:500;color:#63685c}
+.tdot{width:9px;height:9px;border-radius:50%;border:1.5px solid #242820;flex:none}
+.wbtn{width:22px;height:22px;flex:none;display:grid;place-items:center;border:1.5px solid #242820;border-radius:6px;background:#f6f2e8;cursor:pointer;padding:0;box-shadow:inset 0 -2px 0 rgba(36,40,32,.12)}
+.wbtn:hover{background:#ffffff}
+.wbtn:active{transform:translateY(1px);box-shadow:none}
+.wbtn.close{border-radius:50%;background:#c95851}
+.wbtn.close:hover{background:#d96b64}
+.wbody{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.rsz{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;z-index:5;background:linear-gradient(135deg,transparent 0 55%,rgba(36,40,32,.35) 55% 60%,transparent 60% 70%,rgba(36,40,32,.35) 70% 75%,transparent 75%)}
+.win.is-max .rsz{display:none}
+
+/* shared controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border:1.5px solid #242820;border-radius:10px;background:#f6f2e8;cursor:pointer;font-weight:600;font-size:14px;box-shadow:0 3px 0 #242820;transition:transform .08s,box-shadow .08s;text-decoration:none;color:#242820}
+.btn:hover{background:#ffffff}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 #242820}
+.btn.pri{background:#c95851;color:#1a1410}
+.btn.pri:hover{background:#d4655e}
+.btn.moss{background:#345a04;color:#f6f2e8}
+.btn.moss:hover{background:#3e6510}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid currentColor}
+
+/* universe */
+.uv{position:relative;flex:1;overflow:hidden;background:#12180e;cursor:grab;touch-action:none;color:#ece6d6;user-select:none}
+.uv.is-panning{cursor:grabbing}
+.uv-plane{position:absolute;left:0;top:0;width:2600px;height:1700px;transform-origin:0 0}
+.uv-plane.glide{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.planet{position:absolute;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;transition:transform .4s cubic-bezier(.3,1.5,.5,1)}
+.planet:hover,.planet:focus-visible{transform:scale(1.06)}
+.planet:focus-visible{outline:3px solid #e2a93b;outline-offset:-10px}
+.pl-moons{animation:orbit 140s linear infinite;transform-origin:0px 0px}
+.pl-moons.still{animation:none}
+.pl-pulse{animation:pulseRing 2.4s ease-out infinite;transform-origin:0px 0px}
+.pl-sprout{animation:grow .9s cubic-bezier(.3,1.6,.5,1) both;transform-origin:0px 0px}
+.pl-label{position:absolute;width:320px;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;text-align:center}
+.pl-n{font-size:16px;letter-spacing:.06em}
+.pl-name{font-size:36px;line-height:1.05}
+.pl-st{font-size:16px}
+.route-lit{animation:dash 2.6s linear infinite}
+.twk{animation:twinkle 4s ease-in-out infinite}
+.twk2{animation:twinkle 5.5s ease-in-out 1.5s infinite}
+.here{position:absolute;width:300px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.here .tag{background:#e58a80;color:#12180e;font-weight:700;font-size:22px;padding:6px 16px;border-radius:999px;border:2px solid #12180e;white-space:nowrap}
+.here .stem{width:2px;height:26px;background:#e58a80}
+.uv-ui{position:absolute;z-index:4}
+.uv-title{left:22px;top:18px;pointer-events:none}
+.uv-legend{left:18px;bottom:16px;display:flex;flex-wrap:wrap;gap:6px 14px;padding:9px 14px;border:1px solid #33402a;border-radius:10px;background:rgba(18,24,14,.82);font-size:12.5px;color:#cfd2c2}
+.uv-legend span{display:flex;align-items:center;gap:7px}
+.uv-zoom{bottom:16px;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid #33402a;border-radius:12px;background:rgba(18,24,14,.85);transition:right .3s}
+.uv-zoom button{width:36px;height:36px;border:1px solid transparent;border-radius:8px;background:none;color:#ece6d6;cursor:pointer;display:grid;place-items:center}
+.uv-zoom button:hover{background:#26301d;border-color:#3a4730}
+.uv-zoom .pct{min-width:52px;text-align:center;font-size:12.5px;color:#a3a893}
+.uv-hint{left:50%;bottom:20px;transform:translateX(-50%);font-size:12px;color:#8e9584;pointer-events:none;white-space:nowrap}
+.uv-prev{width:280px;padding:14px 16px 14px;background:#1b2315;border:1px solid #46553a;border-radius:12px;box-shadow:0 18px 40px -12px rgba(0,0,0,.6);pointer-events:none;animation:bubbleIn .16s ease}
+.uv-panel{top:14px;right:14px;bottom:14px;width:340px;display:flex;flex-direction:column;background:#1b2315;border:1px solid #46553a;border-radius:14px;box-shadow:-10px 0 40px -10px rgba(0,0,0,.5);animation:slideIn .3s cubic-bezier(.2,.8,.2,1);cursor:default;user-select:text}
+.crow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:13.5px}
+.crow.is-cur{background:#2a2219;border:1px solid #6b3b35}
+.crow .ct{flex:1;min-width:0}
+.btn-d{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border:1.5px solid #0b0f08;border-radius:10px;background:#e58a80;color:#12180e;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #0b0f08}
+.btn-d:active{transform:translateY(3px);box-shadow:none}
+.btn-d.ghost{background:transparent;color:#ece6d6;border-color:#46553a;box-shadow:none}
+.btn-d.ghost:hover{background:#26301d}
+.xbtn{width:32px;height:32px;border:1px solid #46553a;border-radius:8px;background:none;color:#ece6d6;cursor:pointer;display:grid;place-items:center}
+.xbtn:hover{background:#26301d}
+
+/* academy */
+.ac{flex:1;display:flex;flex-direction:column;min-height:0}
+.ac-head{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding:16px 24px 14px;border-bottom:1.5px solid #242820;background:#f6f2e8}
+.steps{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:0}
+.steps li{display:flex;align-items:center}
+.steps li + li::before{content:'';width:22px;height:2px;background:#b4cfb6;margin:0 2px}
+.step{display:flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border:1.5px solid transparent;border-radius:999px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#63685c}
+.step:hover{background:#eae4d5}
+.step.is-done{color:#345a04}
+.step.is-cur{border-color:#242820;background:#eae4d5;color:#242820;box-shadow:0 2px 0 #242820}
+.ac-split{flex:1;min-height:0;display:flex;flex-wrap:wrap}
+.ac-lesson{flex:1 1 440px;min-width:0;min-height:0;display:flex;flex-direction:column;background:#f6f2e8;max-height:100%}
+.ac-inner{flex:1;padding:24px 30px 28px;max-width:640px}
+.ac-nav{flex:none;display:flex;justify-content:space-between;gap:10px;padding:12px 24px;border-top:1px solid rgba(36,40,32,.15);background:#f1ece0}
+.ac-code{flex:1 1 480px;min-width:0;min-height:0;display:flex;flex-direction:column;background:#171d12;border-left:1.5px solid #242820;max-height:100%}
+.kicker{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a6000;letter-spacing:.02em;margin:0 0 8px}
+.h2{font-family:'Young Serif',Georgia,serif;font-size:30px;line-height:1.12;margin:0 0 12px;letter-spacing:-0.015em;text-wrap:balance}
+.lede{font-size:15.5px;line-height:1.6;margin:0 0 16px;text-wrap:pretty;max-width:60ch}
+.lede code,.inl{font-family:'JetBrains Mono',monospace;font-size:.88em;background:#eae4d5;border:1px solid rgba(36,40,32,.15);padding:1px 5px;border-radius:4px}
+.h3{font-size:15px;font-weight:700;margin:22px 0 10px}
+.codeblock{background:#171d12;border:1.5px solid #242820;border-radius:10px;padding:12px 16px;font-size:13px;line-height:22px;white-space:pre;overflow-x:auto;margin:0 0 6px}
+.tags{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px}
+.ttag{position:relative;padding:12px 14px 12px 34px;background:#eae4d5;border:1.5px solid #242820;clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px),0 14px)}
+.ttag::before{content:'';position:absolute;left:12px;top:50%;width:9px;height:9px;margin-top:-5px;border-radius:50%;background:#f6f2e8;border:1.5px solid #242820}
+.ftip{display:flex;gap:12px;padding:12px 14px;border:1.5px dashed #3e6510;border-radius:12px;background:rgba(180,207,182,.28);font-size:14px;margin-top:18px}
+.task{padding:14px 16px;border:1.5px solid #242820;border-radius:12px;background:#ffffff;box-shadow:3px 4px 0 rgba(36,40,32,.1)}
+.checks{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+.checks li{display:flex;align-items:center;gap:10px;font-size:14px}
+.ck{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;border:1.5px solid #9a9f92}
+.ck.ok{background:#345a04;border-color:#345a04}
+.ck.no{background:#f6dcd9;border-color:#a8423c}
+.hint{padding:10px 14px;border-left:0;border-radius:10px;background:#f3e6c4;border:1px solid #d9bf7c;font-size:14px;margin-top:8px;animation:bubbleIn .2s ease}
+.hintbtn{border:0;background:none;padding:6px 0;color:#345a04;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.qcard{padding:16px;border:1.5px solid #242820;border-radius:12px;background:#ffffff;margin-bottom:12px}
+.qopts{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.qopt{display:flex;align-items:center;gap:10px;min-height:42px;text-align:left;padding:8px 12px;border:1.5px solid rgba(36,40,32,.3);border-radius:10px;background:#f6f2e8;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px}
+.qopt:hover{border-color:#242820}
+.qopt.is-sel{border-color:#242820;background:#eae4d5;box-shadow:0 2px 0 #242820}
+.qopt.is-right{border-color:#345a04;background:#dfe9d6}
+.qopt.is-wrong{border-color:#a8423c;background:#f6dcd9}
+.qdot{width:16px;height:16px;flex:none;border-radius:50%;border:1.5px solid #242820;background:#ffffff}
+.qopt.is-sel .qdot{background:#c95851}
+
+/* editor */
+.ed{flex:1;min-height:0;display:flex;flex-direction:column}
+.ed-bar{flex:none;display:flex;align-items:center;gap:10px;height:46px;padding:0 10px 0 0;border-bottom:1px solid #2c3624;background:#1b2315}
+.ed-tab{align-self:stretch;display:flex;align-items:center;gap:8px;padding:0 16px;background:#171d12;border-right:1px solid #2c3624;color:#ece6d6;font-size:12.5px;position:relative}
+.ed-tab::after{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:#e2a93b}
+.ed-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-run{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:1.5px solid #0b0f08;border-radius:8px;background:#e58a80;color:#12180e;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 2px 0 #0b0f08}
+.btn-run:hover{background:#ee9a90}
+.btn-run:active{transform:translateY(2px);box-shadow:none}
+.btn-g{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:1px solid #3a4730;border-radius:8px;background:transparent;color:#d7d9cb;font-weight:600;font-size:12.5px;cursor:pointer}
+.btn-g:hover{background:#26301d}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:11px;padding:0 5px;border-radius:4px;background:rgba(18,24,14,.18)}
+.ed-scroll{flex:1;min-height:0;display:flex;background:#171d12}
+.ed-gutter{flex:none;padding:14px 10px 14px 14px;text-align:right;color:#5f6a55;font-size:12.5px;line-height:22px;user-select:none;border-right:1px solid #232c1c}
+.ed-area{position:relative;flex:1 0 auto;min-width:0}
+.ed-hl{padding:14px 16px;white-space:pre;font-size:13.5px;line-height:22px;color:#e9e3d3;min-width:100%;width:max-content;tab-size:4}
+.ed-ln{min-height:22px}
+.ed-ta{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:14px 16px;border:0;outline:0;resize:none;overflow:hidden;background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#f3c766;font-size:13.5px;line-height:22px;white-space:pre;tab-size:4}
+.ed-ta::selection{background:rgba(180,207,182,.3);-webkit-text-fill-color:transparent}
+.ed-ta:focus-visible{outline:none;box-shadow:inset 0 0 0 2px rgba(229,138,128,.5)}
+.con{flex:none;height:38%;min-height:150px;display:flex;flex-direction:column;border-top:1.5px solid #0b0f08;background:#11160d}
+.con-bar{flex:none;display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 10px 0 16px;font-size:12.5px;font-weight:600;color:#a3a893;border-bottom:1px solid #232c1c}
+.con-bar button{border:0;background:none;color:#a3a893;cursor:pointer;font-size:12.5px;padding:4px 8px;border-radius:6px}
+.con-bar button:hover{background:#26301d;color:#ece6d6}
+.con-body{flex:1;min-height:0;padding:10px 16px 14px;font-size:13px;line-height:21px}
+.con-ln{white-space:pre-wrap;word-break:break-word}
+.con-tip{margin-top:8px;padding:9px 12px;border:1px solid #5d4a1d;border-radius:8px;background:#211c10;color:#f0cf86;font-family:'Figtree',sans-serif;font-size:13.5px;line-height:1.45;white-space:normal}
+
+/* missions */
+.ms{flex:1;min-height:0;display:flex;flex-wrap:wrap}
+.ms-list{flex:0 1 300px;min-width:0;padding:18px 14px 20px;background:#eae4d5;border-right:1.5px solid #242820;max-height:100%}
+.mticket{position:relative;width:100%;display:flex;flex-direction:column;gap:5px;text-align:left;padding:12px 14px 12px 30px;border:0;cursor:pointer;background:#f6f2e8;clip-path:polygon(16px 0,100% 0,100% 100%,16px 100%,0 calc(100% - 16px),0 16px);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.mticket:hover{transform:translateX(3px)}
+.mticket::before{content:'';position:absolute;left:12px;top:16px;width:8px;height:8px;border-radius:50%;background:#eae4d5;box-shadow:0 0 0 1.5px #242820}
+.mticket.is-sel{background:#345a04;color:#f6f2e8}
+.mticket.is-sel .mmeta{color:#cfe0d0}
+.mticket.is-boss{background:#3a1f1b;color:#f6e7e2}
+.mticket.is-boss .mmeta{color:#e7b8b1}
+.mticket.is-sealed{opacity:.72}
+.mmeta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#63685c;display:flex;gap:8px;flex-wrap:wrap}
+.mgroup{font-family:'Young Serif',Georgia,serif;font-size:15px;margin:16px 4px 8px;color:#345a04}
+.ms-brief{flex:1 1 320px;min-width:0;padding:22px 24px;max-height:100%}
+.ms-work{flex:1.4 1 420px;min-width:0;min-height:0;display:flex;flex-direction:column;background:#171d12;border-left:1.5px solid #242820;max-height:100%}
+.ms-runbar{flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid #2c3624;background:#1b2315;color:#cfd2c2;font-size:13px}
+
+/* terminal */
+.tm{flex:1;min-height:0;display:flex}
+.tm-side{flex:none;width:200px;display:flex;flex-direction:column;gap:4px;padding:14px 10px;background:#11160d;border-right:1px solid #2c3624;color:#d7d9cb}
+.tm-sh{font-size:11.5px;font-weight:700;color:#8e9584;margin:10px 8px 4px;letter-spacing:.02em}
+.tm-file{display:flex;align-items:center;gap:8px;width:100%;min-height:32px;padding:0 8px;border:0;border-radius:7px;background:none;color:#d7d9cb;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12.5px;text-align:left}
+.tm-file:hover{background:#1f281a}
+.tm-file.is-on{background:#2a3521;color:#ffffff}
+.tm-main{flex:1;min-width:0;display:flex;flex-direction:column;background:#171d12}
+.tm-tabs{flex:none;display:flex;height:38px;background:#11160d;border-bottom:1px solid #2c3624}
+.tm-tab{display:flex;align-items:center;gap:8px;padding:0 14px;border:0;border-right:1px solid #2c3624;background:none;color:#8e9584;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12.5px;position:relative}
+.tm-tab.is-on{background:#171d12;color:#ece6d6}
+.tm-tab.is-on::after{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:#e2a93b}
+.tm-repl{flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;height:38px;border-top:1px solid #232c1c;background:#11160d}
+.tm-repl label{color:#e2a93b;font-family:'JetBrains Mono',monospace;font-size:13px}
+.tm-repl input{flex:1;min-width:0;height:30px;border:0;outline:0;background:transparent;color:#ece6d6;font-family:'JetBrains Mono',monospace;font-size:13px;caret-color:#f3c766}
+.tm-status{flex:none;display:flex;gap:18px;align-items:center;height:26px;padding:0 14px;background:#345a04;color:#e6efe3;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.tm-pop{position:absolute;right:16px;top:96px;width:300px;padding:14px 16px;background:#f6f2e8;color:#242820;border:1.5px solid #242820;border-radius:12px;box-shadow:4px 5px 0 rgba(0,0,0,.35);z-index:6;animation:bubbleIn .18s ease;font-size:13.5px}
+
+/* profile */
+.pf{flex:1;min-height:0;background:#ddd3ba;padding:22px}
+.book{display:flex;flex-wrap:wrap;max-width:1180px;margin:0 auto;filter:drop-shadow(5px 7px 0 rgba(36,40,32,.18))}
+.page{flex:1 1 440px;min-width:0;padding:26px 28px 30px;background-color:#f6f2e8;background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(52,90,4,.07) 27px 28px);border:1.5px solid #242820}
+.page.l{border-radius:14px 4px 4px 14px;border-right-width:0;box-shadow:inset -18px 0 22px -18px rgba(36,40,32,.35)}
+.page.r{border-radius:4px 14px 14px 4px;box-shadow:inset 18px 0 22px -18px rgba(36,40,32,.35)}
+.pf-h{font-family:'Young Serif',Georgia,serif;font-size:19px;margin:24px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pf-h small{font-family:'Figtree',sans-serif;font-size:12.5px;color:#63685c;font-weight:500}
+.patches{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+.patch{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:12px;line-height:1.3}
+.patch b{font-size:12.5px}
+.patch.locked{color:#63685c}
+.shelf{display:flex;flex-wrap:wrap;gap:14px;padding:14px 12px 10px;border-bottom:6px solid #b47e00;border-radius:2px;background:linear-gradient(transparent 0 85%,rgba(180,126,0,.12) 85%)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px 10px}
+.gal figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.gal figcaption{font-size:12px;font-weight:600}
+.gal figcaption span{display:block;font-weight:400;color:#63685c;font-size:11.5px}
+
+/* overlays */
+.toasts{position:absolute;top:46px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9400;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;padding:10px 14px;min-width:240px;max-width:340px;background:#242820;color:#f6f2e8;border-radius:10px;font-size:13.5px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s cubic-bezier(.2,.8,.2,1)}
+.toast b{color:#f3c766}
+.cele{position:absolute;inset:0;z-index:9500;display:grid;place-items:center;padding:16px;background:rgba(18,24,14,.6);animation:fadeIn .25s ease}
+.cele-card{position:relative;width:min(560px,100%);padding:28px 30px 26px;background:#f6f2e8;border:1.5px solid #242820;border-radius:18px;box-shadow:6px 8px 0 rgba(0,0,0,.3);animation:popIn .5s cubic-bezier(.2,1.4,.4,1)}
+.cele-star{animation:starOn .7s cubic-bezier(.3,1.6,.5,1) both;transform-box:fill-box;transform-origin:center}
+.cele-line{stroke-dasharray:200;stroke-dashoffset:200;animation:draw 1s ease forwards}
+.xpfly{position:absolute;right:120px;top:52px;z-index:9600;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:#f6f2e8;background:#b47e00;border:1.5px solid #242820;border-radius:999px;padding:3px 12px;animation:xpfly 1.4s cubic-bezier(.2,.8,.2,1) both;pointer-events:none}
+.particle{position:absolute;pointer-events:none}
+.pa{animation:floatUp 2.6s ease-out infinite}
+
+/* sprout */
+.sp-sway{animation:sway 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:30% 100%}
+.sp-blink{animation:blink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.sp-bounce{animation:bounce .8s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.sp-hop{animation:bounce .8s ease-in-out 2;transform-box:fill-box;transform-origin:50% 100%}
+.sp-shake{animation:shake .5s ease-in-out 3;transform-box:fill-box}
+.sp-wiggle{animation:wiggle .6s ease-in-out 3;transform-box:fill-box;transform-origin:50% 100%}
+.sp-sleep{animation:breathe 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.sp-tilt{transform:rotate(-12deg);transform-box:fill-box;transform-origin:30% 90%}
+.sp-tongue{animation:tongue 3.8s infinite;transform-box:fill-box;transform-origin:0% 50%}
+.sp-z{animation:zfloat 2.6s ease-in infinite}
+.sp-z2{animation:zfloat 2.6s ease-in 1.3s infinite;opacity:0}
+.sp-spark{animation:spark 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.sp-spark.d2{animation-delay:.4s}.sp-spark.d3{animation-delay:.8s}
+.sp-leaf{animation:leafUp 1.5s ease-out infinite}
+.sp-leaf.d2{animation-delay:.6s}
+
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-2.5deg)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-9px)}65%{transform:translateY(-1px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}30%{transform:rotate(-5deg)}70%{transform:rotate(5deg)}}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97)}}
+@keyframes tongue{0%,82%,100%{transform:scaleX(0)}87%,94%{transform:scaleX(1)}}
+@keyframes zfloat{0%{opacity:0;transform:translate(0,0)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-20px)}}
+@keyframes spark{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1)}}
+@keyframes leafUp{0%{opacity:0;transform:translate(0,0) rotate(0)}20%{opacity:1}100%{opacity:0;transform:translate(6px,-28px) rotate(50deg)}}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes orbit{to{transform:rotate(360deg)}}
+@keyframes pulseRing{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+@keyframes grow{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes dash{to{stroke-dashoffset:-56}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes starOn{0%{opacity:.15;transform:scale(.5)}60%{opacity:1;transform:scale(1.6)}100%{opacity:1;transform:scale(1)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes xpfly{0%{opacity:0;transform:translateY(40px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.1)}70%{opacity:1;transform:translateY(-4px) scale(1)}100%{opacity:0;transform:translateY(-14px) scale(.8)}}
+@keyframes xpA{0%,100%{transform:scale(1)}40%{transform:scale(1.14);background:#f3c766}}
+@keyframes xpB{0%,100%{transform:scale(1)}40%{transform:scale(1.14);background:#f3c766}}
+@keyframes floatUp{0%{opacity:0;transform:translateY(10px) rotate(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-70px) rotate(70deg)}}
+@media (prefers-reduced-motion: reduce){
+  .os *,.os *::before,.os *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
+  .sp-z,.sp-z2,.sp-leaf,.pa{display:none}
+}
+@media (max-width: 760px){
+  .dicons{grid-template-columns:repeat(3,96px);left:50%;transform:translateX(-50%)}
+  .note{display:none}
+  .dock{gap:0;padding:6px}
+  .dk{width:44px}
+  .pot{width:64px}
+  .ac-head,.ac-inner{padding-left:18px;padding-right:18px}
+  .tm-side{display:none}
+}
+/* --- Lithic world additions (environment only; shell above is the shared Terraform OS language) --- */
+.uv.lith{background:#17130d}
+.nodep{position:absolute;border:0;background:none;padding:0;cursor:pointer;z-index:3;animation:nodeIn .42s cubic-bezier(.2,1.4,.4,1) both;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.nodep:hover,.nodep:focus-visible{transform:scale(1.12)}
+.nodep:focus-visible{outline:none}
+.node-label{position:absolute;width:168px;text-align:center;pointer-events:none;transform:translateX(-50%);animation:nodeIn .42s ease both;animation-delay:.12s}
+@keyframes nodeIn{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.nodep,.node-label{animation:none}}
+.wpill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border:1.5px solid #242820;border-radius:999px;background:#e9dcc0;font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;letter-spacing:.04em}
+.orbisback{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 11px;border:1.5px solid #242820;border-radius:999px;background:#f6f2e8;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 2px 0 #242820}
+.orbisback:hover{background:#fff}.orbisback:active{transform:translateY(2px);box-shadow:none}
+</style>
+</helmet>
+
+<div class="os" ref="{{rootRef}}" style="position: relative; width: 100%; height: 100vh; min-height: 720px; overflow: hidden; background: #efe8d6">
+
+  <!-- ============ WALLPAPER (Lithic surface — same paper/ink/warm palette, geological scenery) ============ -->
+  <div class="desk" onPointerDown="{{deskDown}}">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none">
+      <defs>
+        <pattern id="wpDots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#242820" opacity="0.13"></circle></pattern>
+        <clipPath id="wpSpec"><circle cx="1010" cy="420" r="228"></circle></clipPath>
+        <filter id="wpGrain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+      </defs>
+      <rect width="1440" height="900" fill="#efe8d6"></rect>
+      <rect width="1440" height="900" fill="url(#wpDots)"></rect>
+      <!-- survey chart rings (same motif as Botanica, re-labelled as a geological survey) -->
+      <g fill="none" stroke="#242820">
+        <circle cx="1010" cy="420" r="300" stroke-opacity="0.16" stroke-width="1.2"></circle>
+        <circle cx="1010" cy="420" r="378" stroke-opacity="0.12" stroke-dasharray="2 6"></circle>
+        <circle cx="1010" cy="420" r="470" stroke-opacity="0.18" stroke-width="1.2"></circle>
+        <circle cx="1010" cy="420" r="600" stroke-opacity="0.1" stroke-dasharray="10 8"></circle>
+        <sc-for list="{{wallTicks}}" as="t" hint-placeholder-count="20"><line x1="{{t.x1}}" y1="{{t.y1}}" x2="{{t.x2}}" y2="{{t.y2}}" stroke-opacity="{{t.o}}" stroke-width="1.2"></line></sc-for>
+      </g>
+      <g font-family="JetBrains Mono, monospace" font-size="11" fill="#242820" fill-opacity="0.55" letter-spacing="1">
+        <text x="1300" y="128">GRID N 42 · E 06</text>
+        <text x="556" y="148">DEPTH 0 m — SURFACE</text>
+        <text x="1206" y="836">PLATE II — THE LITHIC SHELF</text>
+        <text x="1206" y="852" fill-opacity="0.4">surveyed by the core-sampler Meridian</text>
+      </g>
+      <!-- surveyor's moons → drifting ore pebbles -->
+      <circle cx="1352" cy="214" r="22" fill="#eae4d5" stroke="#242820" stroke-width="2"></circle>
+      <circle cx="1345" cy="208" r="4" fill="#242820" opacity="0.12"></circle>
+      <circle cx="676" cy="250" r="9" fill="#c95851" stroke="#242820" stroke-width="2"></circle>
+      <!-- flecks -->
+      <sc-for list="{{wallStars}}" as="s" hint-placeholder-count="12"><g transform="{{s.tf}}"><path d="M0 -8 L1.7 -1.7 L8 0 L1.7 1.7 L0 8 L-1.7 1.7 L-8 0 L-1.7 -1.7 Z" fill="{{s.c}}" class="{{s.cls}}"></path></g></sc-for>
+      <!-- constellation → a plotted fault line -->
+      <g fill="none" stroke="#242820" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="3 4"><path d="M430 120 L 486 168 L 560 150 L 610 214 L 700 196"></path></g>
+      <g fill="#b47e00" stroke="#242820" stroke-width="1.4"><circle cx="430" cy="120" r="4"></circle><circle cx="486" cy="168" r="5"></circle><circle cx="560" cy="150" r="3.5"></circle><circle cx="610" cy="214" r="4.5"></circle><circle cx="700" cy="196" r="3.5"></circle></g>
+      <text x="430" y="100" font-family="JetBrains Mono, monospace" font-size="11" fill="#242820" fill-opacity="0.6" letter-spacing="1">FAULT β — THE SEAM</text>
+      <!-- the great specimen (was the ringed planet): a cut geode -->
+      <path d="M -330 0 A 330 62 0 0 1 330 0" transform="translate(1010 440) rotate(-12)" fill="none" stroke="#242820" stroke-width="13"></path>
+      <path d="M -330 0 A 330 62 0 0 1 330 0" transform="translate(1010 440) rotate(-12)" fill="none" stroke="#b47e00" stroke-width="9"></path>
+      <circle cx="1010" cy="420" r="228" fill="#c6b48c" stroke="#242820" stroke-width="2"></circle>
+      <g clip-path="url(#wpSpec)">
+        <circle cx="1010" cy="420" r="150" fill="#8A78A6" opacity="0.9" stroke="#242820" stroke-width="2"></circle>
+        <circle cx="1010" cy="420" r="150" fill="none" stroke="#efe8d6" stroke-width="2" stroke-dasharray="3 5" opacity="0.6"></circle>
+        <g stroke="#242820" stroke-width="2" stroke-linejoin="round">
+          <path d="M1010 420 L960 320 L1010 290 L1050 360 Z" fill="#a593c2"></path>
+          <path d="M1010 420 L1050 360 L1110 400 L1070 470 Z" fill="#76688f"></path>
+          <path d="M1010 420 L1070 470 L1010 540 L950 480 Z" fill="#9b8bb5"></path>
+          <path d="M1010 420 L950 480 L900 420 L960 320 Z" fill="#6f628a"></path>
+        </g>
+        <path d="M760 520 C 880 540, 1140 540, 1260 520 L1260 560 Q 1010 600 760 560 Z" fill="#b6a37a"></path>
+      </g>
+      <path d="M -330 0 A 330 62 0 0 0 330 0" transform="translate(1010 440) rotate(-12)" fill="none" stroke="#242820" stroke-width="13"></path>
+      <path d="M -330 0 A 330 62 0 0 0 330 0" transform="translate(1010 440) rotate(-12)" fill="none" stroke="#b47e00" stroke-width="9"></path>
+      <!-- strata hills (were rolling botanical hills) -->
+      <path d="M0 640 C 200 598, 380 612, 560 640 S 900 700, 1100 656 S 1340 606, 1440 626 L1440 900 L0 900 Z" fill="#ddd3ba" stroke="#242820" stroke-width="1.5"></path>
+      <path d="M0 640 C 200 598, 380 612, 560 640 S 900 700, 1100 656 S 1340 606, 1440 626" fill="none" stroke="#242820" stroke-width="1" stroke-dasharray="3 7" opacity="0.4"></path>
+      <path d="M0 724 C 180 672, 340 694, 520 728 S 860 762, 1060 724 S 1320 688, 1440 704 V900 H0 Z" fill="#c6b48c" stroke="#242820" stroke-width="1.5"></path>
+      <path d="M0 724 C 180 672, 340 694, 520 728 S 860 762, 1060 724 S 1320 688, 1440 704" fill="none" stroke="#242820" stroke-width="1" stroke-dasharray="3 7" opacity="0.4"></path>
+      <!-- mine headframe (was the observatory greenhouse) -->
+      <g transform="translate(250 668)">
+        <path d="M-6 -46 L 52 -96" stroke="#242820" stroke-width="5" stroke-linecap="round"></path>
+        <path d="M-6 -46 L 52 -96" stroke="#b47e00" stroke-width="2.5" stroke-linecap="round"></path>
+        <path d="M-44 4 L -26 -72 L 26 -72 L 44 4" fill="#eae4d5" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M-30 -20 H 30 M-20 -46 H 20 M-26 -72 L26 -72" stroke="#242820" stroke-width="1.6" opacity="0.6"></path>
+        <circle cx="0" cy="-54" r="9" fill="#c6b48c" stroke="#242820" stroke-width="2"></circle>
+        <circle cx="0" cy="-54" r="3" fill="#242820"></circle>
+        <rect x="-56" y="2" width="112" height="16" rx="2" fill="#c95851" stroke="#242820" stroke-width="2"></rect>
+        <rect x="-10" y="-8" width="20" height="12" fill="#b47e00" stroke="#242820" stroke-width="1.5"></rect>
+      </g>
+      <!-- scattered ore crystals (were ferns) -->
+      <sc-for list="{{crystals}}" as="c" hint-placeholder-count="6">
+        <g transform="{{c.tf}}"><path d="M0 0 L-7 -22 L0 -34 L7 -22 Z" fill="{{c.f}}" stroke="#242820" stroke-width="1.5" stroke-linejoin="round"></path><path d="M0 0 L0 -34" stroke="#242820" stroke-width="1" opacity="0.4"></path></g>
+      </sc-for>
+      <path d="M0 806 C 220 768, 420 792, 640 822 S 1000 846, 1200 810 S 1380 786, 1440 794 V900 H0 Z" fill="#8a6f3e" stroke="#242820" stroke-width="1.5"></path>
+      <rect width="1440" height="900" filter="url(#wpGrain)" opacity="0.07" style="mix-blend-mode: multiply"></rect>
+    </svg>
+
+    <!-- desktop icons -->
+    <div class="dicons">
+      <sc-for list="{{deskIcons}}" as="ic" hint-placeholder-count="4">
+        <button class="dicon {{ic.cls}}" onClick="{{ic.select}}" onDoubleClick="{{ic.open}}" onKeyDown="{{ic.key}}" aria-label="{{ic.aria}}">
+          <svg viewBox="0 0 64 64" width="58" height="58" aria-hidden="true" style="overflow: visible">
+            <!-- Survey -->
+            <g display="{{ic.dSurvey}}">
+              <path d="M10 14 L26 10 L40 14 L54 10 V 50 L40 54 L26 50 L10 54 Z" fill="#eae4d5" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+              <path d="M26 10 V 50 M40 14 V 54" stroke="#242820" stroke-width="1.6" opacity="0.6"></path>
+              <path d="M15 24 Q 24 20 33 26 T 49 24" fill="none" stroke="#b47e00" stroke-width="2"></path>
+              <path d="M14 38 Q 26 34 38 40" fill="none" stroke="#345a04" stroke-width="2"></path>
+              <circle cx="33" cy="30" r="3.4" fill="#c95851" stroke="#242820" stroke-width="1.6"></circle>
+            </g>
+            <!-- Foundation -->
+            <g display="{{ic.dFound}}">
+              <rect x="10" y="22" width="44" height="7" fill="#c6b48c" stroke="#242820" stroke-width="2"></rect>
+              <path d="M14 22 L32 11 L50 22 Z" fill="#ddd3ba" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+              <path d="M17 29 V 50 M27 29 V 50 M37 29 V 50 M47 29 V 50" stroke="#c6b48c" stroke-width="7"></path>
+              <path d="M17 29 V 50 M27 29 V 50 M37 29 V 50 M47 29 V 50" fill="none" stroke="#242820" stroke-width="1.8"></path>
+              <rect x="10" y="50" width="44" height="7" fill="#b6a37a" stroke="#242820" stroke-width="2"></rect>
+              <circle cx="32" cy="7" r="3" fill="#345a04" stroke="#242820" stroke-width="1.6"></circle>
+            </g>
+            <!-- Journal (logbook) -->
+            <g display="{{ic.dJourn}}">
+              <path d="M12 11 H 48 A 5 5 0 0 1 53 16 V 54 A 2 2 0 0 1 51 56 H 12 Z" fill="#3e6510" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+              <rect x="12" y="11" width="7" height="45" fill="#345a04" stroke="#242820" stroke-width="2"></rect>
+              <rect x="26" y="19" width="21" height="9" rx="1.5" fill="#eae4d5" stroke="#242820" stroke-width="1.5"></rect>
+              <path d="M28 44 L31 40 L34 45 L38 34 L41 44 Z" fill="#b47e00" stroke="#242820" stroke-width="1.4" stroke-linejoin="round"></path>
+            </g>
+            <!-- Orbis (return) -->
+            <g display="{{ic.dOrbis}}">
+              <circle cx="32" cy="32" r="22" fill="#1b2440" stroke="#242820" stroke-width="2"></circle>
+              <ellipse cx="32" cy="32" rx="26" ry="8" fill="none" stroke="#b47e00" stroke-width="2.4" transform="rotate(-18 32 32)"></ellipse>
+              <circle cx="32" cy="32" r="8" fill="#0d1226"></circle>
+              <circle cx="24" cy="22" r="1.6" fill="#f3c766"></circle><circle cx="42" cy="40" r="1.4" fill="#eae4d5"></circle>
+            </g>
+          </svg>
+          <span class="lbl">{{ic.name}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- pinned note -->
+    <div class="note">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="mono" style="margin: 0 0 6px; font-size: 11.5px; color: #8a6000">Next on your dig</p>
+      <p class="disp" style="margin: 0 0 4px; font-size: 21px; line-height: 1.15">{{noteTitle}}</p>
+      <p style="margin: 0 0 14px; font-size: 13px; color: #63685c">{{noteSub}}</p>
+      <button class="btn moss" style="width: 100%" onClick="{{noteAction}}">{{noteBtn}}</button>
+    </div>
+  </div>
+
+  <!-- ============ SURVEY WINDOW (the Lithic world-navigator — same window + pan/zoom pattern as Botanica's Universe) ============ -->
+  <section class="win {{wU.cls}}" style="left: {{wU.x}}px; top: {{wU.y}}px; width: {{wU.w}}px; height: {{wU.h}}px; z-index: {{wU.z}}" onPointerDown="{{wU.onFocus}}" aria-label="Survey window">
+    <div class="tbar" onPointerDown="{{wU.onDown}}" onPointerMove="{{wU.onMove}}" onPointerUp="{{wU.onUp}}" onDoubleClick="{{wU.onDbl}}">
+      <button class="wbtn close" aria-label="Close Survey" onClick="{{wU.close}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.2 2.2 L7.8 7.8 M7.8 2.2 L2.2 7.8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <div class="tstripes"></div>
+      <div class="ttitle"><span class="tdot" style="background: #c6b48c"></span><span>Survey</span><span class="tsub">Lithic — The World Beneath</span></div>
+      <div class="tstripes"></div>
+      <button class="wbtn" aria-label="Minimize Survey" onClick="{{wU.min}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 7 H 8" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+      <button class="wbtn" aria-label="{{wU.maxLabel}}" onClick="{{wU.max}}"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1" fill="none" stroke="#242820" stroke-width="1.5"></rect><rect x="1.5" y="1.5" width="3.6" height="3.6" fill="#242820"></rect></svg></button>
+    </div>
+    <div class="wbody">
+      <div class="uv lith {{uvCls}}" onPointerDown="{{uvDown}}" onPointerMove="{{uvMove}}" onPointerUp="{{uvUp}}" onWheel="{{uvWheel}}">
+        <svg viewBox="0 0 3200 2200" width="3200" height="2200" aria-hidden="true" style="position: absolute; left: -700px; top: -600px; transform: translate({{farX}}px, {{farY}}px); pointer-events: none">
+          <sc-for list="{{farStars}}" as="s" hint-placeholder-count="30"><circle cx="{{s.x}}" cy="{{s.y}}" r="{{s.r}}" fill="{{s.c}}" opacity="{{s.o}}" class="{{s.cls}}"></circle></sc-for>
+        </svg>
+
+        <div class="uv-plane {{planeCls}}" style="transform: translate({{ux}}px, {{uy}}px) scale({{us}})">
+          <svg viewBox="0 0 2600 1700" width="2600" height="1700" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none">
+            <defs><filter id="uvNeb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="70"></feGaussianBlur></filter></defs>
+            <ellipse cx="640" cy="900" rx="440" ry="280" fill="#6b4a1e" opacity="0.26" filter="url(#uvNeb)"></ellipse>
+            <ellipse cx="1620" cy="720" rx="480" ry="250" fill="#4e4368" opacity="0.26" filter="url(#uvNeb)"></ellipse>
+            <ellipse cx="1320" cy="1240" rx="420" ry="240" fill="#7a3f22" opacity="0.2" filter="url(#uvNeb)"></ellipse>
+            <!-- strata bands across the void -->
+            <g stroke="#2a2114" stroke-width="2" fill="none" opacity="0.8">
+              <path d="M-200 520 Q 1300 460 2800 540" stroke-dasharray="2 14"></path>
+              <path d="M-200 980 Q 1300 920 2800 1000"></path>
+              <path d="M-200 1440 Q 1300 1380 2800 1460" stroke-dasharray="14 12"></path>
+            </g>
+            <g font-family="JetBrains Mono, monospace" font-size="20" fill="#7c6a4a" letter-spacing="2">
+              <text x="150" y="560">STRATUM I · LIMESTONE</text>
+              <text x="150" y="1020">STRATUM II · SANDSTONE</text>
+              <text x="150" y="1480">STRATUM III · SLATE &amp; ORE</text>
+              <text x="1180" y="1650">FIG. I — THE LITHIC SHELF · CORED BY THE MERIDIAN</text>
+            </g>
+            <sc-for list="{{nearStars}}" as="s" hint-placeholder-count="30"><circle cx="{{s.x}}" cy="{{s.y}}" r="{{s.r}}" fill="{{s.c}}" opacity="{{s.o}}" class="{{s.cls}}"></circle></sc-for>
+            <!-- survey routes between dig sites -->
+            <sc-for list="{{routes}}" as="r" hint-placeholder-count="2"><path d="{{r.d}}" fill="none" stroke="{{r.c}}" stroke-width="{{r.w}}" stroke-dasharray="{{r.dash}}" stroke-linecap="round" opacity="{{r.o}}" class="{{r.cls}}"></path></sc-for>
+          </svg>
+
+          <sc-for list="{{planets}}" as="p" hint-placeholder-count="3">
+            <div style="display: contents">
+              <button class="planet" style="left: {{p.left}}px; top: {{p.top}}px; width: {{p.size}}px; height: {{p.size}}px; opacity: {{p.op}}; transition: opacity .35s, transform .4s cubic-bezier(.3,1.5,.5,1)" aria-label="{{p.aria}}" onClick="{{p.onClick}}" onMouseEnter="{{p.onEnter}}" onMouseLeave="{{p.onLeave}}" onFocus="{{p.onEnter}}" onBlur="{{p.onLeave}}">
+                <svg viewBox="-100 -100 200 200" width="100%" height="100%" aria-hidden="true" style="display: block; overflow: visible">
+                  <defs>
+                    <radialGradient id="{{p.gid}}" cx="0.36" cy="0.3" r="0.8"><stop offset="0" stop-color="{{p.light}}"></stop><stop offset="0.55" stop-color="{{p.body}}"></stop><stop offset="1" stop-color="{{p.dark}}"></stop></radialGradient>
+                    <clipPath id="{{p.cid}}"><circle r="60"></circle></clipPath>
+                  </defs>
+                  <circle r="98" fill="{{p.glow}}" opacity="{{p.glowOp}}"></circle>
+                  <circle r="86" fill="none" stroke="{{p.orbitC}}" stroke-width="1.4" stroke-dasharray="3 6"></circle>
+                  <circle r="60" fill="url(#{{p.gid}})" stroke="#0b0f08" stroke-width="2.5"></circle>
+                  <g clip-path="url(#{{p.cid}})">
+                    <circle cx="26" cy="22" r="66" fill="#0b0f08" opacity="0.28"></circle>
+                    <!-- Foundation: strata + portico -->
+                    <g display="{{p.dFound}}" stroke="#0b0f08" stroke-width="2" stroke-linejoin="round">
+                      <path d="M-60 26 H 60 M-60 -2 H 60" stroke-width="1.4" opacity="0.4"></path>
+                      <rect x="-46" y="-20" width="92" height="8" fill="{{p.accent}}"></rect>
+                      <path d="M-40 -20 L0 -46 L40 -20 Z" fill="{{p.light}}"></path>
+                      <path d="M-34 -12 V 30 M-12 -12 V 30 M12 -12 V 30 M34 -12 V 30" stroke-width="8" stroke="{{p.accent}}"></path>
+                      <path d="M-34 -12 V 30 M-12 -12 V 30 M12 -12 V 30 M34 -12 V 30" fill="none" stroke-width="1.6"></path>
+                      <rect x="-46" y="30" width="92" height="8" fill="{{p.dark}}"></rect>
+                    </g>
+                    <!-- Matrix: crystal lattice -->
+                    <g display="{{p.dMatrix}}" stroke="#0b0f08" stroke-width="2" stroke-linejoin="round">
+                      <path d="M-6 44 L-34 -28 L-6 -44 L10 26 Z" fill="{{p.light}}"></path>
+                      <path d="M10 26 L-6 -44 L28 -30 L22 40 Z" fill="{{p.accent}}"></path>
+                      <path d="M-44 40 L-58 -6 L-34 -16 L-22 42 Z" fill="{{p.dark}}"></path>
+                      <path d="M30 42 L50 -4 L62 24 L46 52 Z" fill="{{p.accent}}" opacity="0.8"></path>
+                      <g stroke="{{p.light}}" stroke-width="1.6" opacity="0.6" fill="none"><path d="M-34 -28 L-6 -44 L28 -30 M-58 -6 L-6 -44"></path></g>
+                    </g>
+                    <!-- Refinery: stamp-mill gears -->
+                    <g display="{{p.dRefin}}" stroke="#0b0f08">
+                      <circle r="30" fill="none" stroke-width="10" stroke-dasharray="7 6" stroke="{{p.accent}}" opacity="0.85"></circle>
+                      <circle r="15" fill="{{p.dark}}"></circle>
+                      <circle cx="40" cy="26" r="16" fill="none" stroke-width="7" stroke-dasharray="5 5" stroke="{{p.accent}}" opacity="0.7"></circle>
+                      <rect x="-54" y="-8" width="40" height="10" fill="{{p.light}}" stroke-width="2"></rect>
+                      <circle r="5" fill="{{p.light}}"></circle>
+                    </g>
+                  </g>
+                  <path d="M -44 -38 A 58 58 0 0 1 26 -54" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"></path>
+                  <g class="{{p.moonCls}}"><sc-for list="{{p.moons}}" as="m" hint-placeholder-count="4"><circle cx="{{m.x}}" cy="{{m.y}}" r="{{m.r}}" fill="{{m.f}}" stroke="{{m.s}}" stroke-width="1.8"></circle></sc-for></g>
+                  <g display="{{p.dHere}}"><circle r="72" fill="none" stroke="#e58a80" stroke-width="2.5" class="pl-pulse"></circle></g>
+                  <g display="{{p.dSeal}}" transform="translate(46 46)"><circle r="15" fill="#1b1710" stroke="#6f6450" stroke-width="1.8" stroke-dasharray="3 3"></circle><path d="M-6 -1 V -5 A 6 6 0 0 1 6 -5 V -1" fill="none" stroke="#a3977d" stroke-width="1.6"></path><rect x="-6" y="-1" width="12" height="9" rx="1.5" fill="#564b38"></rect></g>
+                </svg>
+              </button>
+              <div class="pl-label" style="left: {{p.lx}}px; top: {{p.ly}}px">
+                <span class="mono pl-n" style="color: {{p.subC}}">{{p.n}} · {{p.sub}}</span>
+                <span class="disp pl-name" style="color: {{p.nameC}}">{{p.name}}</span>
+                <span class="mono pl-st" style="color: {{p.stC}}">{{p.statusText}}</span>
+              </div>
+            </div>
+          </sc-for>
+
+          <!-- spokes + mini-planets: a selected world expands into its concepts -->
+          <svg viewBox="0 0 2600 1700" width="2600" height="1700" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none">
+            <sc-for list="{{spokes}}" as="k" hint-placeholder-count="5"><line x1="{{k.x1}}" y1="{{k.y1}}" x2="{{k.x2}}" y2="{{k.y2}}" stroke="{{k.c}}" stroke-width="2.4" stroke-dasharray="2 7" stroke-linecap="round" opacity="0.7" class="route-lit"></line></sc-for>
+          </svg>
+          <sc-for list="{{nodes}}" as="nd" hint-placeholder-count="5">
+            <div style="display: contents">
+              <button class="nodep" style="left: {{nd.left}}px; top: {{nd.top}}px; width: {{nd.size}}px; height: {{nd.size}}px; animation-delay: {{nd.delay}}s" aria-label="{{nd.aria}}" onClick="{{nd.onClick}}" onMouseEnter="{{nd.onEnter}}" onMouseLeave="{{nd.onLeave}}" onFocus="{{nd.onEnter}}" onBlur="{{nd.onLeave}}">
+                <svg viewBox="-50 -50 100 100" width="100%" height="100%" aria-hidden="true" style="display: block; overflow: visible">
+                  <defs><radialGradient id="{{nd.gid}}" cx="0.36" cy="0.3" r="0.82"><stop offset="0" stop-color="{{nd.light}}"></stop><stop offset="0.6" stop-color="{{nd.body}}"></stop><stop offset="1" stop-color="{{nd.dark}}"></stop></radialGradient></defs>
+                  <circle r="46" fill="{{nd.ringGlow}}" opacity="{{nd.glowOp}}"></circle>
+                  <circle r="30" fill="url(#{{nd.gid}})" stroke="#0b0f08" stroke-width="2"></circle>
+                  <path d="M -22 -18 A 28 28 0 0 1 12 -26" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round"></path>
+                  <g display="{{nd.dCur}}"><circle r="38" fill="none" stroke="#e58a80" stroke-width="2.2" class="pl-pulse"></circle></g>
+                  <g display="{{nd.dLock}}" transform="translate(22 22)"><circle r="11" fill="#1b1710" stroke="#6f6450" stroke-width="1.5" stroke-dasharray="3 3"></circle><rect x="-4.5" y="-1" width="9" height="7" rx="1.2" fill="#564b38"></rect><path d="M-4 -1 V -4 A 4 4 0 0 1 4 -4 V -1" fill="none" stroke="#a3977d" stroke-width="1.4"></path></g>
+                  <text x="0" y="4" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#15110b">{{nd.num}}</text>
+                </svg>
+              </button>
+              <div class="node-label" style="left: {{nd.lx}}px; top: {{nd.ly}}px"><span class="mono" style="font-size: 13px; color: {{nd.labelC}}; display: block; line-height: 1.25">{{nd.name}}</span><span class="mono" style="font-size: 11px; color: {{nd.stateC}}">{{nd.state}}</span></div>
+            </div>
+          </sc-for>
+
+          <sc-if value="{{hasHere}}" hint-placeholder-val="{{true}}">
+            <div class="here" style="left: {{hereX}}px; top: {{hereY}}px"><span class="tag">You are here · {{hereConcept}}</span><span class="stem"></span></div>
+          </sc-if>
+        </div>
+
+        <!-- survey UI -->
+        <div class="uv-ui uv-title">
+          <p class="mono" style="margin: 0 0 4px; font-size: 11.5px; color: #e2a93b; letter-spacing: .06em">PLATE II · 3 DISCIPLINES · 1 OPEN</p>
+          <p class="disp" style="margin: 0; font-size: 28px; line-height: 1.1; color: #ece6d6">The Lithic Shelf</p>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #b7ad94">{{uvSummary}}</p>
+        </div>
+
+        <div class="uv-ui uv-legend" aria-label="Legend">
+          <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="#e58a80"></circle></svg>Where you are</span>
+          <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#e2a93b"></circle></svg>Open to dig</span>
+          <span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#8e8470" stroke-width="1.5" stroke-dasharray="2 2"></circle></svg>Sealed · coming soon</span>
+          <span><svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true"><path d="M1 7 H 21" stroke="#e2a93b" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"></path></svg>Cut passage</span>
+        </div>
+
+        <div class="uv-ui uv-zoom" style="right: {{zoomRight}}px">
+          <button aria-label="Zoom out" onClick="{{zoomOut}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8 H 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button>
+          <span class="pct mono">{{zoomPct}}</span>
+          <button aria-label="Zoom in" onClick="{{zoomIn}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8 H 13 M8 3 V 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button>
+          <button aria-label="Re-centre the survey" onClick="{{zoomReset}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.8"></circle><circle cx="8" cy="8" r="1.6" fill="currentColor"></circle><path d="M8 0.5 V 3 M8 13 V 15.5 M0.5 8 H 3 M13 8 H 15.5" stroke="currentColor" stroke-width="1.8"></path></svg></button>
+        </div>
+
+        <div class="uv-ui uv-hint mono">drag to survey · scroll to zoom · click a dig site</div>
+
+        <sc-if value="{{showPrev}}" hint-placeholder-val="{{false}}">
+          <div class="uv-ui uv-prev" style="left: {{prev.x}}px; top: {{prev.y}}px">
+            <p class="mono" style="margin: 0 0 2px; font-size: 11.5px; color: {{prev.subC}}">{{prev.n}} · {{prev.sub}}</p>
+            <p class="disp" style="margin: 0 0 6px; font-size: 21px; color: #ece6d6">{{prev.name}}</p>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #cfcab8; line-height: 1.45">{{prev.blurb}}</p>
+            <p style="margin: 0; font-size: 12.5px; color: #e2a93b">{{prev.next}}</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{hasPanel}}" hint-placeholder-val="{{false}}">
+          <aside class="uv-ui uv-panel" aria-label="Specimen sheet">
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 14px; border-bottom: 1px solid #3a3222">
+              <svg width="54" height="54" viewBox="-30 -30 60 60" aria-hidden="true" style="flex: none"><circle r="26" fill="{{pan.body}}" stroke="#0b0f08" stroke-width="2"></circle><circle cx="8" cy="8" r="27" fill="#0b0f08" opacity="0.3"></circle><circle r="26" fill="none" stroke="{{pan.light}}" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.8"></circle></svg>
+              <div style="flex: 1; min-width: 0">
+                <p class="mono" style="margin: 0; font-size: 11.5px; color: #e2a93b">{{pan.kick}}</p>
+                <p class="disp" style="margin: 2px 0 2px; font-size: 25px; line-height: 1.1">{{pan.name}}</p>
+                <p style="margin: 0; font-size: 12.5px; color: #b7ad94">{{pan.sub}} · {{pan.statusText}}</p>
+              </div>
+              <button class="xbtn" aria-label="Close specimen sheet" onClick="{{closePanel}}"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+            </div>
+            <div class="scroll-d" style="flex: 1; padding: 14px 14px 10px">
+              <p style="margin: 0 4px 14px; font-size: 13.5px; color: #cfcab8; line-height: 1.5">{{pan.blurb}}</p>
+              <sc-for list="{{pan.concepts}}" as="c" hint-placeholder-count="5">
+                <div class="crow {{c.cls}}">
+                  <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex: none">
+                    <g display="{{c.dCur}}"><circle cx="10" cy="10" r="8" fill="none" stroke="#e58a80" stroke-width="2"></circle><circle cx="10" cy="10" r="4" fill="#e58a80"></circle></g>
+                    <g display="{{c.dTodo}}"><circle cx="10" cy="10" r="7.5" fill="none" stroke="#8a7f68" stroke-width="1.6"></circle></g>
+                    <g display="{{c.dLock}}"><rect x="5" y="9" width="10" height="7.5" rx="1.5" fill="#564b38"></rect><path d="M7 9 V 7 A 3 3 0 0 1 13 7 V 9" fill="none" stroke="#8a7f68" stroke-width="1.6"></path></g>
+                  </svg>
+                  <span class="ct" style="color: {{c.tc}}">{{c.name}}</span>
+                  <span class="mono" style="font-size: 11.5px; color: {{c.sc}}">{{c.state}}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{pan.locked}}" hint-placeholder-val="{{false}}"><p style="margin: 14px 4px 0; padding: 12px 14px; border: 1px dashed #5b5240; border-radius: 10px; font-size: 13px; color: #cfcab8; line-height: 1.5">{{pan.lockNote}}</p></sc-if>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 12px 14px 14px; border-top: 1px solid #3a3222">
+              <sc-if value="{{pan.canLearn}}" hint-placeholder-val="{{false}}"><button class="btn-d" style="flex: 1" onClick="{{enterFoundation}}">{{pan.cta}}</button></sc-if>
+              <sc-if value="{{pan.locked}}" hint-placeholder-val="{{false}}"><button class="btn-d" style="flex: 1; opacity: .5; cursor: not-allowed" disabled="{{true}}">Sealed</button></sc-if>
+              <button class="btn-d ghost" onClick="{{pan.onBack}}">{{pan.backLabel}}</button>
+            </div>
+          </aside>
+        </sc-if>
+      </div>
+    </div>
+    <div class="rsz" onPointerDown="{{wU.onRs}}" onPointerMove="{{wU.onMove}}" onPointerUp="{{wU.onUp}}" aria-hidden="true"></div>
+  </section>
+
+  <!-- ============ MENUBAR ============ -->
+  <div class="mbar">
+    <button class="mitem" aria-label="Terraform OS menu" onClick="{{menuGo}}">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.5"></rect><path d="M6 13 L10 6 L14 13 Z" fill="#345a04" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"></path></svg>
+      <span class="disp" style="font-size: 15px">Terraform</span>
+    </button>
+    <span class="wpill"><svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true"><path d="M5.5 1 L10 4 L8 10 L3 10 L1 4 Z" fill="#8A78A6" stroke="#242820" stroke-width="1"></path></svg>Lithic</span>
+    <button class="mitem app">{{focusName}}</button>
+    <button class="mitem {{menuGoCls}}" onClick="{{menuGo}}" aria-expanded="{{menuGoAria}}">Go</button>
+    <button class="mitem {{menuWinCls}}" onClick="{{menuWin}}" aria-expanded="{{menuWinAria}}">Window</button>
+    <button class="mitem {{menuHelpCls}}" onClick="{{menuHelp}}" aria-expanded="{{menuHelpAria}}">Help</button>
+    <div class="mright">
+      <button class="orbisback" onClick="{{returnOrbis}}" aria-label="Return to Orbis"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8 H4 M8 3 L3 8 L8 13"></path></svg>Orbis</button>
+      <span class="xp-pill {{xpCls}}"><svg width="12" height="12" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0 -6 L 1.4 -1.4 L 6 0 L 1.4 1.4 L 0 6 L -1.4 1.4 L -6 0 L -1.4 -1.4 Z" fill="#b47e00"></path></svg>{{xpText}} XP</span>
+      <span class="mono" style="font-size: 12.5px">{{clock}}</span>
+    </div>
+  </div>
+
+  <sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><button class="scrim" aria-label="Close menu" onClick="{{closeMenu}}"></button></sc-if>
+  <sc-if value="{{menuIsGo}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left: 100px">
+      <sc-for list="{{goItems}}" as="g" hint-placeholder-count="4"><button onClick="{{g.open}}"><span>{{g.name}}</span><span class="k">{{g.k}}</span></button></sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{menuIsWin}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left: 150px">
+      <button onClick="{{openSurveyMax}}"><span>Open the Survey</span><span class="k">full view</span></button>
+      <button onClick="{{minAll}}"><span>Minimize all</span><span class="k">to the tray</span></button>
+      <hr>
+      <button onClick="{{returnOrbis}}"><span>Return to Orbis</span><span class="k">hub</span></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{menuIsHelp}}" hint-placeholder-val="{{false}}">
+    <div class="menu" style="left: 222px">
+      <button onClick="{{askFlint}}"><span>Ask Flint for a reading</span><span class="k">?</span></button>
+      <hr>
+      <button onClick="{{closeMenu}}"><span>Pan the survey</span><span class="k">drag</span></button>
+      <button onClick="{{closeMenu}}"><span>Open a dig site</span><span class="k">click a body</span></button>
+      <button onClick="{{closeMenu}}"><span>Maximize a window</span><span class="k">double-click title</span></button>
+    </div>
+  </sc-if>
+
+  <!-- ============ DOCK + FLINT (the Lithic companion) ============ -->
+  <nav class="dock" aria-label="Tool tray" style="z-index: {{dockZ}}">
+    <sc-for list="{{dockItems}}" as="ic" hint-placeholder-count="4">
+      <button class="dk" onClick="{{ic.open}}" aria-label="{{ic.aria}}">
+        <svg viewBox="0 0 64 64" width="44" height="44" aria-hidden="true" style="overflow: visible">
+          <g display="{{ic.dSurvey}}">
+            <path d="M10 14 L26 10 L40 14 L54 10 V 50 L40 54 L26 50 L10 54 Z" fill="#eae4d5" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+            <path d="M26 10 V 50 M40 14 V 54" stroke="#242820" stroke-width="1.6" opacity="0.6"></path>
+            <path d="M15 24 Q 24 20 33 26 T 49 24" fill="none" stroke="#b47e00" stroke-width="2"></path>
+            <circle cx="33" cy="30" r="3.4" fill="#c95851" stroke="#242820" stroke-width="1.6"></circle>
+          </g>
+          <g display="{{ic.dFound}}">
+            <rect x="10" y="22" width="44" height="7" fill="#c6b48c" stroke="#242820" stroke-width="2"></rect>
+            <path d="M14 22 L32 11 L50 22 Z" fill="#ddd3ba" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+            <path d="M17 29 V 50 M27 29 V 50 M37 29 V 50 M47 29 V 50" stroke="#c6b48c" stroke-width="7"></path>
+            <path d="M17 29 V 50 M27 29 V 50 M37 29 V 50 M47 29 V 50" fill="none" stroke="#242820" stroke-width="1.8"></path>
+            <rect x="10" y="50" width="44" height="7" fill="#b6a37a" stroke="#242820" stroke-width="2"></rect>
+          </g>
+          <g display="{{ic.dJourn}}">
+            <path d="M12 11 H 48 A 5 5 0 0 1 53 16 V 54 A 2 2 0 0 1 51 56 H 12 Z" fill="#3e6510" stroke="#242820" stroke-width="2" stroke-linejoin="round"></path>
+            <rect x="12" y="11" width="7" height="45" fill="#345a04" stroke="#242820" stroke-width="2"></rect>
+            <rect x="26" y="19" width="21" height="9" rx="1.5" fill="#eae4d5" stroke="#242820" stroke-width="1.5"></rect>
+            <path d="M28 44 L31 40 L34 45 L38 34 L41 44 Z" fill="#b47e00" stroke="#242820" stroke-width="1.4" stroke-linejoin="round"></path>
+          </g>
+          <g display="{{ic.dOrbis}}">
+            <circle cx="32" cy="32" r="22" fill="#1b2440" stroke="#242820" stroke-width="2"></circle>
+            <ellipse cx="32" cy="32" rx="26" ry="8" fill="none" stroke="#b47e00" stroke-width="2.4" transform="rotate(-18 32 32)"></ellipse>
+            <circle cx="32" cy="32" r="8" fill="#0d1226"></circle>
+            <circle cx="24" cy="22" r="1.6" fill="#f3c766"></circle>
+          </g>
+        </svg>
+        <span class="tip">{{ic.name}}</span>
+        <sc-if value="{{ic.running}}" hint-placeholder-val="{{false}}"><span class="run"></span></sc-if>
+      </button>
+    </sc-for>
+    <span class="dsep" aria-hidden="true"></span>
+    <div class="pot">
+      <sc-for list="{{companion}}" as="s" hint-placeholder-count="1">
+        <button class="sprout-btn" onClick="{{s.pet}}" aria-label="Tap Flint, your survey companion">
+          <svg viewBox="0 0 124 108" width="104" height="90" aria-hidden="true" style="overflow: visible; display: block">
+            <ellipse cx="60" cy="101" rx="40" ry="5" fill="#242820" opacity="0.13"></ellipse>
+            <g class="{{s.anim}}">
+              <!-- little rock body -->
+              <path d="M24 98 C 8 96, 12 72, 30 68 C 40 50, 74 48, 86 66 C 106 68, 110 94, 92 98 Z" fill="#242820"></path>
+              <path d="M27 95 C 15 93, 19 74, 33 71 C 42 55, 72 53, 82 69 C 99 72, 102 92, 88 95 Z" fill="{{s.bodyC}}"></path>
+              <path d="M27 95 C 15 93, 19 74, 33 71 C 42 55, 72 53, 82 69" fill="none" stroke="#efe8d6" stroke-width="2.5" stroke-dasharray="2 9" opacity="0.5" stroke-linecap="round"></path>
+              <!-- a crystal growing from its back -->
+              <g class="{{s.headCls}}" stroke="#242820" stroke-width="2" stroke-linejoin="round">
+                <path d="M70 60 L62 24 L74 16 L82 50 Z" fill="#8A78A6"></path>
+                <path d="M82 50 L74 16 L90 24 L88 56 Z" fill="#6f628a"></path>
+                <path d="M56 62 L50 38 L62 34 L68 60 Z" fill="#a593c2"></path>
+              </g>
+              <!-- face on the rock -->
+              <g class="{{s.blink}}"><circle cx="46" cy="80" r="5" fill="#f6f2e8" stroke="#242820" stroke-width="1.6"></circle><circle cx="63" cy="80" r="5" fill="#f6f2e8" stroke="#242820" stroke-width="1.6"></circle><circle cx="47" cy="81" r="2.4" fill="#242820"></circle><circle cx="64" cy="81" r="2.4" fill="#242820"></circle></g>
+              <g display="{{s.dHappy}}"><path d="M41 82 Q 46 76 51 82 M58 82 Q 63 76 68 82" fill="none" stroke="#242820" stroke-width="2" stroke-linecap="round"></path></g>
+              <g display="{{s.dOpen}}"><path d="M48 89 Q 54 94 60 89" fill="none" stroke="#242820" stroke-width="1.8" stroke-linecap="round"></path></g>
+              <g display="{{s.dSmile}}"><path d="M49 90 Q 54 93 59 90" fill="none" stroke="#242820" stroke-width="1.7" stroke-linecap="round"></path></g>
+              <g display="{{s.dBlush}}"><circle cx="38" cy="86" r="3.2" fill="#c95851" opacity="0.45"></circle><circle cx="72" cy="86" r="3" fill="#c95851" opacity="0.45"></circle></g>
+            </g>
+            <g display="{{s.dZ}}"><text class="sp-z" x="100" y="40" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="#8A78A6">z</text></g>
+            <g display="{{s.dSpark}}" fill="#b47e00"><g transform="translate(96 22)"><path class="sp-spark" d="M0 -6 L 1.6 -1.6 L 6 0 L 1.6 1.6 L 0 6 L -1.6 1.6 L -6 0 L -1.6 -1.6 Z"></path></g><g transform="translate(60 16)"><path class="sp-spark d2" d="M0 -5 L 1.3 -1.3 L 5 0 L 1.3 1.3 L 0 5 L -1.3 1.3 L -5 0 L -1.3 -1.3 Z"></path></g></g>
+          </svg>
+        </button>
+        <sc-if value="{{s.hasBubble}}" hint-placeholder-val="{{false}}"><div class="bubble" role="status"><span class="who">Flint</span>{{s.bubble}}</div></sc-if>
+      </sc-for>
+    </div>
+  </nav>
+
+  <!-- ============ TOASTS ============ -->
+  <div class="toasts" aria-live="polite">
+    <sc-for list="{{toasts}}" as="t" hint-placeholder-count="0">
+      <div class="toast"><svg width="16" height="16" viewBox="-8 -8 16 16" aria-hidden="true"><path d="M0 -7 L 1.7 -1.7 L 7 0 L 1.7 1.7 L 0 7 L -1.7 1.7 L -7 0 L -1.7 -1.7 Z" fill="#f3c766"></path></svg><span>{{t.text}} <b>{{t.xp}}</b></span></div>
+    </sc-for>
+  </div>
+
+  <!-- ============ TRANSITION OVERLAY (reuses the shared celebration card) ============ -->
+  <sc-if value="{{hasCele}}" hint-placeholder-val="{{false}}">
+    <div class="cele" role="dialog" aria-modal="true" aria-label="{{cele.title}}">
+      <div class="cele-card">
+        <svg viewBox="0 0 500 150" width="100%" aria-hidden="true" style="display: block; margin: -6px 0 12px; background: #17130d; border-radius: 12px; border: 1.5px solid #242820">
+          <g display="{{cele.isFound}}" transform="translate(250 92)" stroke="#0b0f08" stroke-width="2.5" stroke-linejoin="round">
+            <rect x="-70" y="-16" width="140" height="10" fill="#c6b48c"></rect>
+            <path d="M-56 -16 L0 -52 L56 -16 Z" fill="#ddd3ba"></path>
+            <path d="M-48 -6 V 40 M-18 -6 V 40 M18 -6 V 40 M48 -6 V 40" stroke="#c6b48c" stroke-width="12"></path>
+            <path d="M-48 -6 V 40 M-18 -6 V 40 M18 -6 V 40 M48 -6 V 40" fill="none" stroke-width="2"></path>
+            <rect x="-70" y="40" width="140" height="10" fill="#b6a37a"></rect>
+          </g>
+          <g display="{{cele.isOrbis}}" transform="translate(250 75)"><circle r="40" fill="#1b2440" stroke="#b47e00" stroke-width="2.5"></circle><ellipse rx="64" ry="18" fill="none" stroke="#c6b48c" stroke-width="3" transform="rotate(-16)"></ellipse><circle r="15" fill="#0d1226"></circle><circle cx="-18" cy="-10" r="2" fill="#f3c766"></circle><circle cx="20" cy="14" r="1.6" fill="#eae4d5"></circle></g>
+          <text x="250" y="138" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#a3977d" letter-spacing="2">{{cele.constLabel}}</text>
+        </svg>
+        <p class="mono" style="margin: 0 0 4px; font-size: 12px; color: #8a6000; letter-spacing: .04em">{{cele.kicker}}</p>
+        <p class="disp" style="margin: 0 0 10px; font-size: 32px; line-height: 1.08">{{cele.title}}</p>
+        <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.55; color: #3c4036">{{cele.body}}</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <button class="btn pri" onClick="{{cele.primary}}">{{cele.primaryLabel}}</button>
+          <button class="btn" onClick="{{closeCele}}">Stay on the shelf</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"enum","options":["desktop","survey"],"default":"survey","section":"Prototype"},"site":{"editor":"enum","options":["none","foundation","matrix","refinery"],"default":"none","section":"Prototype"},"$preview":{"width":1440,"height":900}}'>
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+var R1 = rng(13), R2 = rng(57), R3 = rng(91);
+var FAR_STARS = []; for (var fi = 0; fi < 130; fi++) FAR_STARS.push({ x: Math.round(R1() * 3200), y: Math.round(R1() * 2200), r: (0.6 + R1() * 1.2).toFixed(2), o: (0.2 + R1() * 0.4).toFixed(2), c: R1() > 0.82 ? '#d9a24c' : '#b7ad94', cls: R1() > 0.82 ? 'twk' : '' });
+var NEAR_STARS = []; for (var ni = 0; ni < 90; ni++) NEAR_STARS.push({ x: Math.round(R2() * 2600), y: Math.round(R2() * 1700), r: (1 + R2() * 2).toFixed(2), o: (0.25 + R2() * 0.5).toFixed(2), c: R2() > 0.82 ? '#e2a93b' : (R2() > 0.7 ? '#8A78A6' : '#a3977d'), cls: R2() > 0.76 ? 'twk2' : '' });
+var WALL_STARS = []; [[140, 160], [300, 90], [520, 70], [760, 120], [860, 60], [1180, 90], [1420, 160], [1240, 230], [620, 300], [1400, 340], [90, 300], [380, 260]].forEach(function (p, i) { var s = 0.5 + R3() * 0.7; WALL_STARS.push({ tf: 'translate(' + p[0] + ' ' + p[1] + ') scale(' + s.toFixed(2) + ')', c: i % 3 === 0 ? '#c95851' : '#b47e00', cls: i % 2 ? 'twk' : '' }); });
+var WALL_TICKS = []; for (var ti = 0; ti < 72; ti++) { var ang = ti * 5 * Math.PI / 180, big = ti % 6 === 0, r1 = big ? 452 : 462; WALL_TICKS.push({ x1: (1010 + Math.cos(ang) * r1).toFixed(1), y1: (420 + Math.sin(ang) * r1).toFixed(1), x2: (1010 + Math.cos(ang) * 470).toFixed(1), y2: (420 + Math.sin(ang) * 470).toFixed(1), o: big ? 0.35 : 0.18 }); }
+var CRYSTALS = [[60, 742, '#8A78A6'], [120, 764, '#6f628a'], [556, 762, '#b47e00'], [612, 776, '#8A78A6'], [1288, 734, '#8A78A6'], [1352, 760, '#6f628a'], [884, 792, '#b47e00'], [1120, 772, '#8A78A6']].map(function (f, i) { return { tf: 'translate(' + f[0] + ' ' + f[1] + ') scale(' + (1 + (i % 3) * 0.35).toFixed(2) + ')', f: f[2] }; });
+
+var REGIONS = [
+  { id: 'foundation', n: '01', sub: 'HTML', name: 'The Foundation', x: 840, y: 800, size: 322,
+    light: '#e6c877', body: '#c69a3e', dark: '#7a5410', accent: '#8a5a12', glow: '#e2a93b', orbitC: '#8a7a3a',
+    status: 'open', statusText: 'Open · V2.0', version: 'V2.0',
+    blurb: 'The first discipline. Excavate a buried portico and raise it stone by stone — HTML as the load-bearing structure beneath every page.',
+    concepts: [
+      { tag: 'Elements', name: 'The first stone', state: 'Current' },
+      { tag: 'Nesting', name: 'The masonry tree', state: 'Next' },
+      { tag: 'Semantics', name: 'Structure that means', state: 'Locked' },
+      { tag: 'Attributes', name: 'Marks & anchors', state: 'Locked' },
+      { tag: 'Forms', name: 'Doors in the wall', state: 'Locked' }
+    ] },
+  { id: 'matrix', n: '02', sub: 'DAX', name: 'The Crystal Matrix', x: 1790, y: 680, size: 282,
+    light: '#c9bce0', body: '#8A78A6', dark: '#4e4368', accent: '#6f628a', glow: '#8A78A6', orbitC: '#6f628a',
+    status: 'soon', statusText: 'Sealed · V3.0', version: 'V3.0',
+    blurb: 'A chamber of growing crystal. DAX — the language of measures and relationships — read in the geometric lattice that forms as data accretes.',
+    concepts: [
+      { tag: 'Lattice', name: 'Reading the lattice', state: 'Locked' },
+      { tag: 'Measures', name: 'Measures & context', state: 'Locked' },
+      { tag: 'Relations', name: 'Joining the veins', state: 'Locked' },
+      { tag: 'Time', name: 'Time intelligence', state: 'Locked' }
+    ] },
+  { id: 'refinery', n: '03', sub: 'Power Query M', name: 'The Refinery', x: 1280, y: 1320, size: 300,
+    light: '#d79a6f', body: '#b06a3f', dark: '#5c3418', accent: '#8a4a24', glow: '#b06a3f', orbitC: '#8a5a3a',
+    status: 'soon', statusText: 'Sealed · V4.0', version: 'V4.0',
+    blurb: 'At the lowest level, raw ore meets the stamp mill. Power Query M — the language of shaping and cleaning — routing crude material until it comes out refined.',
+    concepts: [
+      { tag: 'Sources', name: 'The intake', state: 'Locked' },
+      { tag: 'Transforms', name: 'Crushing the ore', state: 'Locked' },
+      { tag: 'Filter', name: 'Separating & grouping', state: 'Locked' },
+      { tag: 'Load', name: 'The pour — merge & load', state: 'Locked' }
+    ] }
+];
+var LESSON_ARC = ['Warm-up', 'Walk-through', 'Practice', 'Challenge', 'Recap'];
+function lessonsFor(region, ci) {
+  var states = (region.status === 'open' && ci === 0) ? ['Current', 'Next', 'Next', 'Locked', 'Locked'] : ['Locked', 'Locked', 'Locked', 'Locked', 'Locked'];
+  return LESSON_ARC.map(function (nm, j) { return { name: nm, state: states[j] }; });
+}
+function lessonSpoke(spokes, cp, lp, ca, sa, c) { spokes.push({ x1: (cp.x + 56 * ca).toFixed(1), y1: (cp.y + 56 * sa).toFixed(1), x2: (lp.x - 30 * ca).toFixed(1), y2: (lp.y - 30 * sa).toFixed(1), c: c }); }
+var APPS = [{ id: 'survey', name: 'Survey', x: 210, y: 70, w: 1080, h: 660, minW: 620 }];
+var PETS = ['Density reads nominal. You are standing on solid rock.', 'Tap all you like — I am ninety-eight percent mineral.', 'The Foundation is sound. The deeper galleries are still being shored.', 'I read the strata so you do not have to. Limestone up top, ore below.'];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.timers = {};
+    this.lastAct = Date.now();
+    this.rootRef = (el) => {
+      if (!el || el === this.rootEl) return;
+      this.rootEl = el;
+      if (typeof ResizeObserver !== 'undefined') { this.ro = new ResizeObserver(() => this.measure()); this.ro.observe(el); }
+      setTimeout(() => { this.measure(); this.resetView(); }, 30);
+    };
+    var start = props.start || 'survey';
+    var r = props.site && props.site !== 'none' ? props.site : null;
+    this.state = {
+      wins: { survey: { x: APPS[0].x, y: APPS[0].y, w: APPS[0].w, h: APPS[0].h, open: start !== 'desktop', min: false, max: false, z: 20 } },
+      ztop: 20, focus: start === 'desktop' ? null : 'survey',
+      selIcon: null, menu: null,
+      mood: 'idle', bubble: 'That amber one is the Foundation. You are standing on it. Click it.', pets: 0,
+      ux: -100, uy: -150, us: 0.5, hov: null, sel: r, conc: null, panning: false, glide: false,
+      cele: null, toasts: [], xpPulse: 0,
+      W: 1440, H: 900, now: new Date()
+    };
+  }
+  componentDidMount() {
+    this.clockT = setInterval(() => this.setState({ now: new Date() }), 30000);
+    this.idleT = setInterval(() => { if (Date.now() - this.lastAct > 40000 && this.state.mood === 'idle' && !this.state.cele) this.setState({ mood: 'sleeping', bubble: null }); }, 5000);
+    this.later('bubble', () => this.setState({ bubble: null }), 8000);
+  }
+  componentWillUnmount() { clearInterval(this.clockT); clearInterval(this.idleT); Object.keys(this.timers).forEach((k) => clearTimeout(this.timers[k])); if (this.ro) this.ro.disconnect(); }
+  componentDidUpdate(prev) {
+    if (prev.start !== this.props.start && this.props.start) { var s = this.props.start; var wins = Object.assign({}, this.state.wins); wins.survey = Object.assign({}, wins.survey, { open: s !== 'desktop', min: false }); this.setState({ wins: wins, focus: s === 'desktop' ? null : 'survey' }); }
+    if (prev.site !== this.props.site) { var r = this.props.site && this.props.site !== 'none' ? this.props.site : null; this.setState({ sel: r }); if (r) this.later('fit', () => this.selectPlanet(r), 20); }
+  }
+  later(key, fn, ms) { clearTimeout(this.timers[key]); this.timers[key] = setTimeout(fn, ms); }
+  measure() { var el = this.rootEl; if (!el) return; var W = el.offsetWidth || 1440, H = el.offsetHeight || 900; if (W !== this.state.W || H !== this.state.H) this.setState({ W: W, H: H }); }
+  scaleK() { var el = this.rootEl; if (!el || !el.offsetWidth) return 1; return el.getBoundingClientRect().width / el.offsetWidth || 1; }
+  poke() { this.lastAct = Date.now(); if (this.state.mood === 'sleeping') this.setState({ mood: 'idle' }); }
+  say(text, mood, ms) { var st = { bubble: text }; if (mood) st.mood = mood; this.setState(st); this.later('bubble', () => this.setState({ bubble: null }), Math.max(4500, (ms || 0) + 1500)); if (mood && mood !== 'idle') this.later('mood', () => this.setState({ mood: 'idle' }), ms || 2400); }
+  toast(text, xp) { var id = Date.now() + Math.random(); this.setState((s) => ({ toasts: s.toasts.concat([{ id: id, text: text, xp: xp || '' }]).slice(-3) })); setTimeout(() => this.setState((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 4200); }
+
+  /* ---- windows ---- */
+  geom(id) {
+    var st = this.state, w = st.wins[id], W = st.W, H = st.H, top = 34;
+    if (w.max || W < 760) return { x: 0, y: top, w: W, h: Math.max(300, H - top - 92), max: true };
+    var gw = Math.min(w.w, W - 16), gh = Math.min(w.h, H - top - 12);
+    return { x: clamp(w.x, -gw + 140, W - 100), y: clamp(w.y, top, H - 60), w: gw, h: gh, max: false };
+  }
+  focusWin(id) { var st = this.state; if (st.focus === id && st.wins[id].z === st.ztop) return; var z = st.ztop + 1, wins = Object.assign({}, st.wins); wins[id] = Object.assign({}, wins[id], { z: z }); this.setState({ wins: wins, ztop: z, focus: id }); }
+  openApp(id, extra) { this.poke(); var st = this.state, z = st.ztop + 1, wins = Object.assign({}, st.wins); wins[id] = Object.assign({}, wins[id], { open: true, min: false, z: z }, extra || {}); this.setState({ wins: wins, ztop: z, focus: id, menu: null, selIcon: id }); }
+  closeWin(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { open: false, max: false }); this.setState({ wins: wins, focus: this.state.focus === id ? null : this.state.focus }); }
+  minWin(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { min: true }); this.setState({ wins: wins, focus: this.state.focus === id ? null : this.state.focus }); }
+  toggleMax(id) { var wins = Object.assign({}, this.state.wins); wins[id] = Object.assign({}, wins[id], { max: !wins[id].max }); this.setState({ wins: wins }); this.focusWin(id); this.later('fit', () => this.resetView(), 30); }
+  dragStart(id, mode, e) {
+    if (e.button !== 0) return;
+    if (mode === 'move' && e.target && e.target.closest && e.target.closest('button')) return;
+    var g = this.geom(id); if (g.max && mode === 'move') return;
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+    this.drag = { id: id, mode: mode, sx: e.clientX, sy: e.clientY, ox: g.x, oy: g.y, ow: g.w, oh: g.h, k: this.scaleK() };
+    this.focusWin(id); e.preventDefault();
+  }
+  dragMove(e) {
+    var d = this.drag; if (!d) return;
+    var dx = (e.clientX - d.sx) / d.k, dy = (e.clientY - d.sy) / d.k;
+    var wins = Object.assign({}, this.state.wins), w = Object.assign({}, wins[d.id]);
+    if (d.mode === 'move') { w.x = Math.round(d.ox + dx); w.y = Math.round(d.oy + dy); }
+    else { w.x = d.ox; w.y = d.oy; w.w = Math.max(APPS[0].minW, Math.round(d.ow + dx)); w.h = Math.max(360, Math.round(d.oh + dy)); }
+    wins[d.id] = w; this.setState({ wins: wins });
+  }
+  dragEnd() { this.drag = null; }
+  winVals(id, label) {
+    var st = this.state, w = st.wins[id], g = this.geom(id), visible = w.open && !w.min;
+    var cls = [visible ? 'is-open' : 'is-hidden', g.max ? 'is-max' : '', st.focus === id ? '' : 'is-blur'].join(' ');
+    return {
+      x: g.x, y: g.y, w: g.w, h: g.h, z: w.z, cls: cls, maxLabel: (g.max ? 'Restore ' : 'Maximize ') + label,
+      onFocus: () => { this.poke(); this.focusWin(id); },
+      onDown: (e) => this.dragStart(id, 'move', e), onMove: (e) => this.dragMove(e), onUp: () => this.dragEnd(),
+      onRs: (e) => this.dragStart(id, 'size', e),
+      onDbl: (e) => { if (e.target && e.target.closest && e.target.closest('button')) return; this.toggleMax(id); },
+      close: () => this.closeWin(id), min: () => this.minWin(id), max: () => this.toggleMax(id)
+    };
+  }
+
+  /* ---- survey (world navigator) ---- */
+  uvSize() { var g = this.geom('survey'); return { w: g.w, h: g.h - 36 }; }
+  uvDown(e) {
+    if (e.button !== 0) return;
+    if (e.target && e.target.closest && e.target.closest('button, .uv-panel, .uv-zoom, .uv-legend')) return;
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+    this.pan = { sx: e.clientX, sy: e.clientY, ox: this.state.ux, oy: this.state.uy, k: this.scaleK(), moved: false };
+    this.setState({ panning: true, glide: false, hov: null });
+  }
+  uvMove(e) { var p = this.pan; if (!p) return; var dx = (e.clientX - p.sx) / p.k, dy = (e.clientY - p.sy) / p.k; if (Math.abs(dx) + Math.abs(dy) > 3) p.moved = true; this.setState({ ux: p.ox + dx, uy: p.oy + dy }); }
+  uvUp() {
+    var p = this.pan; this.pan = null; this.setState({ panning: false });
+    if (p && !p.moved) {
+      if (this.state.conc != null) { var id = this.state.sel; this.setState({ conc: null }); this.selectPlanet(id); }
+      else if (this.state.sel) this.setState({ sel: null });
+    }
+  }
+  concPos(r, i) { var N = r.concepts.length, Rp = r.size * 0.62 + 104, ang = (-90 + i * (360 / N)) * Math.PI / 180; return { x: r.x + Rp * Math.cos(ang), y: r.y + Rp * Math.sin(ang), ang: ang }; }
+  uvWheel(e) {
+    var r = e.currentTarget.getBoundingClientRect(), k = this.scaleK();
+    var px = (e.clientX - r.left) / k, py = (e.clientY - r.top) / k, s = this.state.us;
+    var ns = clamp(s * (e.deltaY < 0 ? 1.1 : 1 / 1.1), 0.3, 1.5);
+    this.setState({ us: ns, ux: px - (px - this.state.ux) * (ns / s), uy: py - (py - this.state.uy) * (ns / s), glide: false });
+  }
+  zoomBy(f) { var v = this.uvSize(), cx = v.w / 2, cy = v.h / 2, s = this.state.us, ns = clamp(s * f, 0.3, 1.5); this.setState({ us: ns, ux: cx - (cx - this.state.ux) * (ns / s), uy: cy - (cy - this.state.uy) * (ns / s), glide: true }); }
+  resetView() { var v = this.uvSize(), s = clamp(Math.min(v.w / 1820, v.h / 1140), 0.3, 0.82); this.setState({ us: s, ux: v.w / 2 - 1300 * s, uy: v.h / 2 - 1000 * s, glide: true, sel: null }); }
+  selectPlanet(id) {
+    this.poke();
+    var r = REGIONS.filter(function (x) { return x.id === id; })[0], v = this.uvSize();
+    var s = clamp(Math.max(this.state.us, 0.6), 0.3, 0.7);
+    var cx = (v.w - (v.w > 760 ? 360 : 0)) / 2;
+    this.setState({ sel: id, conc: null, hov: null, us: s, ux: cx - r.x * s, uy: v.h / 2 - r.y * s, glide: true });
+  }
+  selectConcept(i) {
+    this.poke();
+    var r = REGIONS.filter(function (x) { return x.id === this.state.sel; }.bind(this))[0]; if (!r) return;
+    var p = this.concPos(r, i), v = this.uvSize(), s = clamp(Math.max(this.state.us, 0.92), 0.3, 1.05);
+    var cx = (v.w - (v.w > 760 ? 360 : 0)) / 2;
+    this.setState({ conc: i, hov: null, us: s, ux: cx - p.x * s, uy: v.h / 2 - p.y * s, glide: true });
+  }
+
+  petFlint() {
+    this.poke();
+    var n = this.state.pets + 1;
+    this.setState({ pets: n, mood: 'petted' });
+    this.say(PETS[(n - 1) % PETS.length], 'petted', 1600);
+  }
+  enterFoundation() { this.poke(); this.setState({ cele: 'foundation', menu: null }); }
+  returnOrbis() { this.poke(); this.setState({ cele: 'orbis', menu: null }); }
+
+  spriteFlags(mood) {
+    var s = { anim: '', headCls: '', blink: '', dHappy: 0, dOpen: 0, dSmile: 0, dBlush: 0, dZ: 0, dSpark: 0 };
+    if (mood === 'sleeping') { s.anim = 'sp-sleep'; s.dZ = 1; return s; }
+    if (mood === 'petted') { s.anim = 'sp-wiggle'; s.headCls = 'sp-spark'; s.dHappy = s.dBlush = s.dSpark = 1; return s; }
+    if (mood === 'happy' || mood === 'celebrating') { s.anim = 'sp-hop'; s.dHappy = s.dBlush = 1; return s; }
+    s.anim = 'sp-sway'; s.blink = 'sp-blink'; s.dOpen = s.dSmile = 1; return s;
+  }
+
+  renderVals() {
+    var self = this, st = this.state, D = function (b) { return b ? 'inline' : 'none'; };
+    var now = st.now, hh = now.getHours(), mm = now.getMinutes();
+    var clock = (hh % 12 || 12) + ':' + (mm < 10 ? '0' + mm : mm) + ' ' + (hh < 12 ? 'AM' : 'PM');
+    var wU = this.winVals('survey', 'Survey');
+    var v = this.uvSize();
+
+    var iconFlags = function (kind) { return { dSurvey: D(kind === 'survey'), dFound: D(kind === 'foundation'), dJourn: D(kind === 'journal'), dOrbis: D(kind === 'orbis') }; };
+    var ICONS = [
+      { id: 'survey', kind: 'survey', name: 'Survey' },
+      { id: 'foundation', kind: 'foundation', name: 'The Foundation' },
+      { id: 'journal', kind: 'journal', name: 'Field Journal' },
+      { id: 'orbis', kind: 'orbis', name: 'Orbis' }
+    ];
+    var doIcon = function (id) {
+      if (id === 'survey') self.openApp('survey');
+      else if (id === 'foundation') self.enterFoundation();
+      else if (id === 'orbis') self.returnOrbis();
+      else self.toast('Field Journal opens with The Foundation', 'Stage 2');
+    };
+
+    var deskIcons = ICONS.map(function (it) { return Object.assign({
+      name: it.name, aria: it.name, cls: st.selIcon === it.id ? 'is-sel' : '',
+      select: function () { self.setState({ selIcon: it.id }); },
+      open: function () { doIcon(it.id); },
+      key: function (e) { if (e.key === 'Enter') { e.preventDefault(); doIcon(it.id); } }
+    }, iconFlags(it.kind)); });
+
+    var dockItems = ICONS.map(function (it) { return Object.assign({
+      name: it.name, aria: it.name, running: it.id === 'survey' && st.wins.survey.open && !st.wins.survey.min,
+      open: function () { if (it.id === 'survey') { if (st.wins.survey.open && !st.wins.survey.min && st.focus === 'survey') self.minWin('survey'); else self.openApp('survey'); } else doIcon(it.id); }
+    }, iconFlags(it.kind)); });
+
+    var planets = REGIONS.map(function (r) {
+      var isSel = st.sel === r.id, here = r.id === 'foundation', sealed = r.status === 'soon';
+      var moons = here ? [{ x: 78, y: -34, r: 6, f: '#e6c877', s: '#0b0f08' }, { x: -70, y: 44, r: 5, f: '#c95851', s: '#0b0f08' }, { x: 40, y: 72, r: 4, f: '#8A78A6', s: '#0b0f08' }]
+        : (r.id === 'matrix' ? [{ x: 72, y: 40, r: 5, f: '#c9bce0', s: '#0b0f08' }, { x: -66, y: -30, r: 4, f: '#8A78A6', s: '#0b0f08' }]
+          : [{ x: 70, y: -40, r: 5, f: '#d79a6f', s: '#0b0f08' }, { x: -64, y: 46, r: 4, f: '#8a4a24', s: '#0b0f08' }]);
+      return {
+        left: r.x - r.size / 2, top: r.y - r.size / 2, size: r.size,
+        op: (st.sel && st.sel !== r.id) ? 0.28 : 1,
+        aria: r.name + ', ' + r.sub + ', ' + r.statusText,
+        onClick: function () { self.selectPlanet(r.id); },
+        onEnter: function () { if (!st.panning) self.setState({ hov: r.id }); },
+        onLeave: function () { if (st.hov === r.id) self.setState({ hov: null }); },
+        gid: 'g_' + r.id, cid: 'c_' + r.id,
+        light: r.light, body: r.body, dark: r.dark, accent: r.accent, glow: r.glow, orbitC: r.orbitC,
+        glowOp: isSel ? 0.5 : (st.hov === r.id ? 0.4 : 0.22),
+        dFound: D(r.id === 'foundation'), dMatrix: D(r.id === 'matrix'), dRefin: D(r.id === 'refinery'),
+        moons: moons, moonCls: here ? 'pl-moons' : 'pl-moons still',
+        dHere: D(here), dSeal: D(sealed),
+        lx: r.x - 160, ly: r.y + r.size / 2 + 6,
+        subC: sealed ? '#8a7f68' : '#e2a93b', n: r.n, sub: r.sub,
+        nameC: sealed ? '#b7ad94' : '#ece6d6', name: r.name,
+        stC: sealed ? '#8a7f68' : '#e58a80', statusText: r.statusText
+      };
+    });
+
+    var routes = [
+      { d: 'M840 800 Q 1340 620 1790 680', c: '#e2a93b', w: 5, dash: '2 14', o: 0.8, cls: 'route-lit' },
+      { d: 'M840 800 Q 1020 1120 1280 1320', c: '#8a7f68', w: 4, dash: '5 12', o: 0.5, cls: '' },
+      { d: 'M1790 680 Q 1620 1040 1280 1320', c: '#8a7f68', w: 4, dash: '5 12', o: 0.4, cls: '' }
+    ];
+
+    /* Expansion tiers: world -> concept mini-planets -> each concept's 5 lessons. */
+    var nodes = [], spokes = [];
+    var selR = st.sel ? REGIONS.filter(function (x) { return x.id === st.sel; })[0] : null;
+    var mkNode = function (o) {
+      return { left: o.x - o.size / 2, top: o.y - o.size / 2, size: o.size, delay: o.delay, aria: o.aria,
+        gid: o.gid, light: o.light, body: o.body, dark: o.dark, ringGlow: o.glow, glowOp: o.glowOp,
+        dCur: D(o.cur), dLock: D(o.lock), num: o.num, lx: o.x, ly: o.y + o.size / 2 + 2, name: o.name, state: o.state,
+        labelC: o.cur ? '#f6ede0' : (o.lock ? '#9a9079' : '#e2d9c6'), stateC: o.cur ? '#e58a80' : (o.lock ? '#6f6450' : '#b7ad94'),
+        onClick: o.onClick, onEnter: function () {}, onLeave: function () {} };
+    };
+    if (selR && st.conc == null) {
+      /* tier 1 — concepts around the world */
+      selR.concepts.forEach(function (c, i) {
+        var p = self.concPos(selR, i), ca = Math.cos(p.ang), sa = Math.sin(p.ang), size = 96;
+        var cur = c.state === 'Current', lock = c.state === 'Locked';
+        nodes.push(mkNode({ x: p.x, y: p.y, size: size, delay: (i * 0.05).toFixed(2), aria: selR.name + ' — ' + c.tag + ', ' + c.state + ', opens 5 lessons',
+          gid: 'cn_' + selR.id + '_' + i, light: selR.light, body: selR.body, dark: selR.dark, glow: selR.glow, glowOp: cur ? 0.55 : 0.2,
+          cur: cur, lock: lock, num: String(i + 1), name: c.tag, state: '5 lessons',
+          onClick: function () { self.selectConcept(i); } }));
+        spokes.push({ x1: (selR.x + selR.size * 0.46 * ca).toFixed(1), y1: (selR.y + selR.size * 0.46 * sa).toFixed(1), x2: (p.x - 44 * ca).toFixed(1), y2: (p.y - 44 * sa).toFixed(1), c: cur ? '#e2a93b' : (lock ? '#6f6450' : '#b7ad94') });
+      });
+    } else if (selR && st.conc != null) {
+      /* tier 2 — the chosen concept at the hub, its 5 lessons around it */
+      var ci = st.conc, con = selR.concepts[ci], cp = self.concPos(selR, ci);
+      var hubCur = con.state === 'Current', hubLock = con.state === 'Locked';
+      nodes.push(mkNode({ x: cp.x, y: cp.y, size: 110, delay: '0', aria: con.tag + ' — tap to go back to ' + selR.name,
+        gid: 'hub_' + selR.id + '_' + ci, light: selR.light, body: selR.body, dark: selR.dark, glow: selR.glow, glowOp: 0.5,
+        cur: hubCur, lock: hubLock, num: String(ci + 1), name: con.tag, state: 'concept',
+        onClick: function () { var id = st.sel; self.setState({ conc: null }); self.selectPlanet(id); } }));
+      var lessons = lessonsFor(selR, ci), M = lessons.length, Rl = 162;
+      lessons.forEach(function (ls, j) {
+        var ang = (-90 + j * (360 / M)) * Math.PI / 180, ca = Math.cos(ang), sa = Math.sin(ang);
+        var lx = cp.x + Rl * ca, ly = cp.y + Rl * sa, size = 62;
+        var cur = ls.state === 'Current', lock = ls.state === 'Locked';
+        nodes.push(mkNode({ x: lx, y: ly, size: size, delay: (0.06 + j * 0.05).toFixed(2), aria: con.tag + ' lesson ' + (j + 1) + ' — ' + ls.name + ', ' + ls.state,
+          gid: 'ls_' + selR.id + '_' + ci + '_' + j, light: selR.light, body: selR.body, dark: selR.dark, glow: selR.glow, glowOp: cur ? 0.6 : 0.18,
+          cur: cur, lock: lock, num: String(j + 1), name: ls.name, state: ls.state,
+          onClick: function () { if (selR.status === 'open' && !lock) self.enterFoundation(); else self.toast(con.tag + ' · ' + ls.name + ' is sealed', selR.version); } }));
+        lessonSpoke(spokes, cp, { x: lx, y: ly }, ca, sa, cur ? '#e2a93b' : (lock ? '#6f6450' : '#b7ad94'));
+      });
+    }
+
+    var found = REGIONS[0];
+    var hov = st.hov ? REGIONS.filter(function (x) { return x.id === st.hov; })[0] : null;
+    var prev = null;
+    if (hov && !st.sel) {
+      var px = st.ux + hov.x * st.us, py = st.uy + hov.y * st.us;
+      prev = { x: clamp(px - 140, 12, Math.max(14, v.w - 292)), y: clamp(py - 190, 12, Math.max(14, v.h - 170)),
+        subC: hov.status === 'soon' ? '#8a7f68' : '#e2a93b', n: hov.n, sub: hov.sub, name: hov.name,
+        blurb: hov.blurb, next: hov.status === 'open' ? 'Open — click to survey the dig site' : 'Sealed — preview only · ' + hov.version };
+    }
+
+    var sel = st.sel ? REGIONS.filter(function (x) { return x.id === st.sel; })[0] : null;
+    var rowFn = function (nm, state) {
+      var cur = state === 'Current', todo = state === 'Next', lock = state === 'Locked';
+      return { cls: cur ? 'is-cur' : '', dCur: D(cur), dTodo: D(todo), dLock: D(lock), name: nm, state: state,
+        tc: cur ? '#f6ede0' : (lock ? '#9a9079' : '#cfcab8'), sc: cur ? '#e58a80' : (lock ? '#6f6450' : '#b7ad94') };
+    };
+    var pan = null;
+    if (sel && st.conc == null) {
+      /* tier 1 — world sheet, lists concepts (each opens 5 lessons) */
+      pan = {
+        kick: 'SPECIMEN SHEET · DISCIPLINE ' + sel.n, name: sel.name, sub: sel.sub, statusText: sel.statusText, body: sel.body, light: sel.light,
+        blurb: sel.blurb, locked: sel.status === 'soon', canLearn: sel.status === 'open', cta: 'Enter the Foundation',
+        lockNote: sel.status === 'soon' ? 'This gallery is still being shored. ' + sel.name + ' (' + sel.sub + ') opens in a later release — version ' + sel.version + ', not a date. Each concept below still holds its five lessons.' : 'Click a concept on the map to open its five lessons.',
+        concepts: sel.concepts.map(function (c) { return rowFn(c.tag + ' — ' + c.name, c.state === 'Current' ? 'Current' : (c.state === 'Next' ? 'Next' : '5 lessons')); }),
+        backLabel: 'Orbis', onBack: function () { self.returnOrbis(); }
+      };
+    } else if (sel && st.conc != null) {
+      /* tier 2 — concept sheet, lists its 5 lessons */
+      var con = sel.concepts[st.conc], lessons = lessonsFor(sel, st.conc);
+      pan = {
+        kick: 'LESSON SET · ' + sel.name.toUpperCase(), name: con.tag, sub: con.name + ' · 5 lessons', statusText: sel.statusText, body: sel.body, light: sel.light,
+        blurb: con.name + '. ' + (sel.status === 'open' ? 'Five lessons carry this concept from warm-up to recap.' : 'Preview only — this discipline is sealed until version ' + sel.version + '.'),
+        locked: sel.status === 'soon', canLearn: sel.status === 'open' && st.conc === 0, cta: 'Enter the first lesson',
+        lockNote: sel.status === 'soon' ? 'Sealed — these lessons open with ' + sel.sub + ' (' + sel.version + ').' : (st.conc !== 0 ? 'Finish the earlier concepts to unlock these lessons.' : ''),
+        concepts: lessons.map(function (ls, j) { return rowFn('L' + (j + 1) + ' · ' + ls.name, ls.state); }),
+        backLabel: '← ' + sel.name, onBack: function () { var id = st.sel; self.setState({ conc: null }); self.selectPlanet(id); }
+      };
+    }
+
+    var CELE = {
+      foundation: { title: 'The First Stone', isFound: D(true), isOrbis: D(false), constLabel: 'THE FOUNDATION · HTML · V2.0', kicker: 'Descending to the dig site',
+        body: 'This is where the HTML learning environment opens in Stage 2 — the editor, the stone-by-stone live preview, and the first restoration mission. Simulated for now.',
+        primary: 'foundation', primaryLabel: 'Back to the Survey' },
+      orbis: { title: 'Return to Orbis', isFound: D(false), isOrbis: D(true), constLabel: 'TERRAFORM OS · CENTRAL HUB', kicker: 'Ascending the shaft',
+        body: 'Climbing back to the Orbis hub, where Botanica, Lithic and the sealed universes all sit on the same chart. (Orbis is a separate world — this hand-off is simulated here.)',
+        primary: 'orbis', primaryLabel: 'Close' }
+    };
+    var C = st.cele ? CELE[st.cele] : null;
+
+    var sprite = this.spriteFlags(st.mood);
+
+    var menuT = function (k) { return function () { self.setState({ menu: st.menu === k ? null : k }); }; };
+
+    return {
+      rootRef: this.rootRef,
+      deskDown: function (e) { if (e.target === e.currentTarget || (e.target.tagName && e.target.tagName.toLowerCase() === 'svg')) self.setState({ selIcon: null }); },
+      wallTicks: WALL_TICKS, wallStars: WALL_STARS, crystals: CRYSTALS,
+      deskIcons: deskIcons,
+      noteTitle: 'Lay the First Stone', noteSub: 'The Foundation · HTML · Module 01', noteBtn: 'Open the Survey',
+      noteAction: function () { self.openApp('survey'); self.later('fit', function () { self.selectPlanet('foundation'); }, 30); },
+
+      wU: wU,
+      uvCls: st.panning ? 'is-panning' : '', planeCls: st.glide && !st.panning ? 'glide' : '',
+      ux: st.ux, uy: st.uy, us: st.us, farX: st.ux * 0.35, farY: st.uy * 0.35,
+      uvDown: function (e) { self.uvDown(e); }, uvMove: function (e) { self.uvMove(e); }, uvUp: function () { self.uvUp(); }, uvWheel: function (e) { self.uvWheel(e); },
+      farStars: FAR_STARS, nearStars: NEAR_STARS, routes: routes, planets: planets, nodes: nodes, spokes: spokes,
+      hasHere: !st.sel, hereX: found.x - 150, hereY: found.y + found.size / 2 + 48, hereConcept: 'The Foundation',
+      uvSummary: 'Three disciplines cut into the shelf — one open, two sealed. Drag to survey, click a body to read its sheet.',
+      zoomRight: (v.w > 760 && st.sel) ? 356 : 16, zoomPct: Math.round(st.us * 100) + '%',
+      zoomIn: function () { self.zoomBy(1.25); }, zoomOut: function () { self.zoomBy(0.8); }, zoomReset: function () { self.resetView(); },
+      showPrev: !!prev, prev: prev || {},
+      hasPanel: !!pan, pan: pan || {}, closePanel: function () { self.setState({ sel: null }); },
+      enterFoundation: function () { self.enterFoundation(); }, returnOrbis: function () { self.returnOrbis(); },
+
+      focusName: 'Survey',
+      menuGo: menuT('go'), menuWin: menuT('win'), menuHelp: menuT('help'), closeMenu: function () { self.setState({ menu: null }); },
+      menuGoCls: st.menu === 'go' ? 'is-on' : '', menuWinCls: st.menu === 'win' ? 'is-on' : '', menuHelpCls: st.menu === 'help' ? 'is-on' : '',
+      menuGoAria: st.menu === 'go' ? 'true' : 'false', menuWinAria: st.menu === 'win' ? 'true' : 'false', menuHelpAria: st.menu === 'help' ? 'true' : 'false',
+      menuOpen: !!st.menu, menuIsGo: st.menu === 'go', menuIsWin: st.menu === 'win', menuIsHelp: st.menu === 'help',
+      goItems: [
+        { name: 'Survey', k: '⌘1', open: function () { self.openApp('survey'); } },
+        { name: 'The Foundation', k: '⌘2', open: function () { self.enterFoundation(); } },
+        { name: 'Field Journal', k: '⌘3', open: function () { self.toast('Field Journal opens with The Foundation', 'Stage 2'); self.setState({ menu: null }); } },
+        { name: 'Return to Orbis', k: '⌘0', open: function () { self.returnOrbis(); } }
+      ],
+      openSurveyMax: function () { self.openApp('survey', { max: true }); self.later('fit', function () { self.resetView(); }, 40); },
+      minAll: function () { self.minWin('survey'); self.setState({ menu: null }); },
+      askFlint: function () { self.setState({ menu: null }); self.say('The Foundation is the only sound gallery so far. Start there — click the amber body.', 'happy', 2400); },
+
+      xpText: '640', xpCls: '', clock: clock,
+      dockZ: 9100, dockItems: dockItems,
+      companion: [Object.assign({ pet: function () { self.petFlint(); }, bodyC: '#8a7f68', hasBubble: !!st.bubble, bubble: st.bubble }, sprite)],
+      toasts: st.toasts,
+      hasCele: !!C, cele: C ? Object.assign({}, C, { primary: function () { var tgt = C.primary; self.setState({ cele: null, mood: 'idle' }); if (tgt === 'orbis') self.toast('Orbis hand-off simulated', ''); if (tgt === 'foundation') { self.openApp('survey'); self.selectPlanet('foundation'); } } }) : {},
+      closeCele: function () { self.setState({ cele: null, mood: 'idle' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
