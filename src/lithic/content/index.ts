@@ -4,8 +4,9 @@
 
 import type { HtmlLesson } from './types';
 import { STONE_LESSONS } from './html/stone';
+import { WALLS_LESSONS } from './html/walls';
 
-export const HTML_LESSONS: HtmlLesson[] = [...STONE_LESSONS];
+export const HTML_LESSONS: HtmlLesson[] = [...STONE_LESSONS, ...WALLS_LESSONS];
 export const htmlLessonById = (id: string): HtmlLesson | undefined => HTML_LESSONS.find((l) => l.id === id);
 
 /** Lesson ids with authored content (the rest open the "coming soon" card for now). */
