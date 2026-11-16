@@ -1,15 +1,22 @@
 // The Lithic world shell: the Terraform OS shell (menu bar, window, dock) re-skinned geological, hosting the
-// Survey navigator. Modeled on how Orbis renders its own shell — reuses MenuBar, Window and createShell. The
-// lesson workspace (the Lithic Academy) lands in a later build; until then a lesson node opens an honest card.
+// Survey navigator and the HTML Academy. Modeled on how Orbis renders its own shell — reuses MenuBar, Window
+// and createShell. The single workspace window shows the Survey, or the open lesson's Academy. Authored lessons
+// open the Academy; unauthored ones (not yet written) open an honest "coming soon" card.
 
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { MenuBar, type MenuItem } from '../shell/MenuBar';
 import { Window, type WinChrome } from '../shell/Window';
 import { createShell, geom, type MenuKey, type WinDef } from '../shell/windowReducer';
-import type { Progress } from '../progression/progress';
+import { isDone } from '../progression/progress';
+import type { KV } from '../storage/db';
 import { lithicLessonById } from './curriculum';
+import { useLithicLearning } from './store';
+import { htmlLessonById, AUTHORED_LESSON_IDS } from './content';
+import type { AcademyAwards } from './academy/LithicAcademy';
 
 const SurveyApp = lazy(() => import('./survey/SurveyApp'));
+const LithicAcademy = lazy(() => import('./academy/LithicAcademy'));
+interface Saved { code: Record<string, string>; passed: Record<string, boolean>; hints: Record<string, number>; done: Record<string, boolean> }
 
 type LithicId = 'survey';
 const LITHIC_APPS: readonly WinDef<LithicId>[] = [{ id: 'survey', x: 60, y: 64, w: 1060, h: 624, minW: 520 }];
@@ -45,8 +52,9 @@ function Wallpaper() {
 }
 
 interface Props {
-  progress: Progress;
-  xpText: string;
+  kv: KV;
+  /** Botanica's XP, so the shell shows a single global total (Botanica + Lithic). */
+  baseXp: number;
   active: boolean;
   fullscreen: boolean;
   onToggleFullscreen: () => Promise<boolean>;
@@ -55,13 +63,17 @@ interface Props {
   resume?: { lessonId?: string; key: number };
 }
 
-export default function LithicApp({ progress, xpText, active, fullscreen, onToggleFullscreen, onExitToOrbis, resume }: Props) {
+export default function LithicApp({ kv, baseXp, active, fullscreen, onToggleFullscreen, onExitToOrbis, resume }: Props) {
+  const learn = useLithicLearning(kv);
   const [shell, dispatch] = useReducer(lithicShell.shellReducer, undefined, () => lithicShell.initialShell('survey'));
   const [size, setSize] = useState({ W: 1440, H: 860 });
   const [fitSignal, setFitSignal] = useState(1);
   const [framePlanet, setFramePlanet] = useState<string | null>(null);
   const [lessonCard, setLessonCard] = useState<string | null>(null);
+  const [openLessonId, setOpenLessonId] = useState<string | null>(null);
+  const [saved, setSaved] = useState<Saved | undefined>();
   const root = useRef<HTMLDivElement>(null);
+  const xpText = (baseXp + learn.xp).toLocaleString('en');
 
   useLayoutEffect(() => {
     const el = root.current; if (!el) return;
@@ -82,7 +94,15 @@ export default function LithicApp({ progress, xpText, active, fullscreen, onTogg
     dispatch({ type: 'open', id: 'survey' });
   }, [resume]);
 
-  const openLesson = useCallback((lessonId: string) => setLessonCard(lessonId), []);
+  // Authored lessons open the Academy (loading any saved work); the rest open the honest "coming soon" card.
+  const openLesson = useCallback((lessonId: string) => {
+    if (!AUTHORED_LESSON_IDS.has(lessonId)) { setLessonCard(lessonId); return; }
+    setSaved(undefined);
+    kv.get(`li-lesson:${lessonId}`).catch(() => undefined).then((raw) => setSaved((raw as Saved) ?? { code: {}, passed: {}, hints: {}, done: {} }));
+    setOpenLessonId(lessonId);
+  }, [kv]);
+  const saveLesson = useCallback((id: string, s: Saved) => { setSaved(s); kv.set(`li-lesson:${id}`, s).catch(() => {}); }, [kv]);
+  const closeLesson = useCallback(() => { setOpenLessonId(null); setFitSignal((n) => n + 1); }, []);
 
   const toggleFs = useCallback(() => { void onToggleFullscreen(); dispatch({ type: 'menu', menu: null }); }, [onToggleFullscreen]);
   const setMenu = useCallback((m: MenuKey | null) => dispatch({ type: 'menu', menu: m }), []);
@@ -113,18 +133,24 @@ export default function LithicApp({ progress, xpText, active, fullscreen, onTogg
 
   const g = geom(shell.wins.survey, size.W, size.H);
   const lesson = lessonCard ? lithicLessonById(lessonCard) : null;
+  const academyLesson = openLessonId ? htmlLessonById(openLessonId) : null;
+  const winSub = academyLesson ? `The Foundation · ${academyLesson.title}` : 'Lithic — The World Beneath';
 
   return (
     <div className="os" ref={root} style={{ position: 'relative', width: '100%', height: '100vh', minHeight: '720px', overflow: 'hidden', background: '#efe8d6' }}>
-      <MenuBar brand="Lithic" focusName="Survey" menu={shell.menu} setMenu={setMenu} menus={menus} xpText={xpText} onActivity={() => {}} />
+      <MenuBar brand="Lithic" focusName={academyLesson ? 'Academy' : 'Survey'} menu={shell.menu} setMenu={setMenu} menus={menus} xpText={xpText} onActivity={() => {}} />
 
       <div className="desk">
         <Wallpaper />
       </div>
 
-      <Window app={CHROME.survey} win={shell.wins.survey} g={g} focused={shell.focus === 'survey'} dispatch={dispatch} onActivity={() => {}} scale={scale} sub="Lithic — The World Beneath">
+      <Window app={CHROME.survey} win={shell.wins.survey} g={g} focused={shell.focus === 'survey'} dispatch={dispatch} onActivity={() => {}} scale={scale} sub={winSub}>
         <Suspense fallback={<div className="wbody" style={{ background: '#17130d' }} />}>
-          <SurveyApp progress={progress} fitSignal={fitSignal} framePlanet={framePlanet} scale={scale} onOpenLesson={openLesson} onReturnToOrbis={onExitToOrbis} />
+          {academyLesson && saved
+            ? <div className="wbody"><LithicAcademy lesson={academyLesson} completed={isDone(learn.progress, academyLesson.conceptId)} initial={saved} awards={learn.awards as AcademyAwards} onSave={(s) => saveLesson(academyLesson.id, s)} onExit={closeLesson} /></div>
+            : academyLesson
+            ? <div className="wbody" style={{ background: '#f6f2e8' }} />
+            : <SurveyApp progress={learn.progress} fitSignal={fitSignal} framePlanet={framePlanet} scale={scale} onOpenLesson={openLesson} onReturnToOrbis={onExitToOrbis} />}
         </Suspense>
       </Window>
 

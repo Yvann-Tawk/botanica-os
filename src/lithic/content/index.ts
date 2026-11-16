@@ -1,0 +1,12 @@
+// All authored Lithic lessons, assembled for the Lithic Academy (a lazy chunk). As mini-planets are authored,
+// import their lesson arrays here; the Survey/curriculum metadata in ../curriculum.ts stays the index the shell
+// uses without loading this text.
+
+import type { HtmlLesson } from './types';
+import { STONE_LESSONS } from './html/stone';
+
+export const HTML_LESSONS: HtmlLesson[] = [...STONE_LESSONS];
+export const htmlLessonById = (id: string): HtmlLesson | undefined => HTML_LESSONS.find((l) => l.id === id);
+
+/** Lesson ids with authored content (the rest open the "coming soon" card for now). */
+export const AUTHORED_LESSON_IDS = new Set(HTML_LESSONS.map((l) => l.id));
