@@ -25,15 +25,18 @@ export function normalizeOrbis(raw: unknown): OrbisPrefs {
   return p;
 }
 
-export type Place = 'orbis' | 'botanica';
+export type Place = 'orbis' | 'botanica' | 'lithic';
 export const BOTANICA_HASH = '#/botanica';
+export const LITHIC_HASH = '#/lithic';
 
 /**
  * Where Terraform OS opens. Orbis is the front door; a Botanica deep link (#/botanica, ?start= or ?demo=)
- * goes straight into the Python world, which also keeps older bookmarks and tests working.
+ * goes straight into the Python world, which also keeps older bookmarks and tests working. #/lithic opens the
+ * Lithic world.
  */
 export function resolvePlace(search: string, hash: string): Place {
   const q = new URLSearchParams(search);
   if (hash === BOTANICA_HASH || q.has('start') || q.has('demo')) return 'botanica';
+  if (hash === LITHIC_HASH) return 'lithic';
   return 'orbis';
 }

@@ -1,0 +1,49 @@
+/* Lithic world additions. The Terraform OS shell CSS (prototype.css) is shared and must not be redefined here;
+   this file adds only the Lithic-specific environment: the geological navigator void, the expansion nodes, and
+   the world pill / Return-to-Orbis control. Ported from the approved design's "Lithic world additions" block
+   (Main.dc.html) plus its environmental tokens (DESIGN_TOKENS §B). */
+
+:root {
+  --li-cavern: #17130d;
+  --li-sandstone: #c69a3e;
+  --li-sandstone-lt: #e6c877;
+  --li-amethyst: #8a78a6;
+  --li-copper: #b06a3f;
+}
+
+/* navigator void — overrides Botanica's #12180e for the geological survey */
+.uv.lith { background: #17130d; }
+
+/* expansion nodes (mini-planets, lessons) fanned on spokes */
+.nodep {
+  position: absolute; border: 0; background: none; padding: 0; cursor: pointer; z-index: 3;
+  animation: nodeIn .42s cubic-bezier(.2, 1.4, .4, 1) both;
+  transition: transform .3s cubic-bezier(.3, 1.6, .5, 1);
+}
+.nodep:hover, .nodep:focus-visible { transform: scale(1.12); }
+.nodep:focus-visible { outline: none; }
+.nodep[disabled] { cursor: default; }
+.nodep[disabled]:hover { transform: none; }
+.node-label {
+  position: absolute; width: 168px; text-align: center; pointer-events: none;
+  transform: translateX(-50%); animation: nodeIn .42s ease both; animation-delay: .12s;
+}
+@keyframes nodeIn { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
+
+/* menubar world pill + Return-to-Orbis pill */
+.wpill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px;
+  border: 1.5px solid #242820; border-radius: 999px; background: #e9dcc0;
+  font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; letter-spacing: .04em;
+}
+.orbisback {
+  display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px;
+  border: 1.5px solid #242820; border-radius: 999px; background: #f6f2e8; cursor: pointer;
+  font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 0 #242820;
+}
+.orbisback:hover { background: #fff; }
+.orbisback:active { transform: translateY(2px); box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nodep, .node-label { animation: none; }
+}
