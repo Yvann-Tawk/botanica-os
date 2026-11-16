@@ -2,6 +2,7 @@
 // Only the Academy (Milestone 4) writes completions. Nothing here awards progress by itself.
 
 import { CONCEPTS_PER_REGION, REGIONS, prerequisites, regionOf } from '../content/curriculum';
+import { isKnownConcept } from './conceptRegistry';
 
 export interface Progress {
   v: 1;
@@ -15,7 +16,7 @@ export function normalizeProgress(raw: unknown): Progress {
   const r = raw as Partial<Progress> | null;
   const completed: Record<string, string> = {};
   if (r && typeof r === 'object' && r.completed && typeof r.completed === 'object') {
-    for (const [k, v] of Object.entries(r.completed)) if (regionOf(k) && typeof v === 'string') completed[k] = v;
+    for (const [k, v] of Object.entries(r.completed)) if (isKnownConcept(k) && typeof v === 'string') completed[k] = v;
   }
   return { v: 1, completed };
 }
@@ -24,7 +25,7 @@ export const isDone = (p: Progress, conceptId: string) => conceptId in p.complet
 
 /** Completing is idempotent: the first timestamp is kept. */
 export function complete(p: Progress, conceptId: string, at = new Date().toISOString()): Progress {
-  if (isDone(p, conceptId) || !regionOf(conceptId)) return p;
+  if (isDone(p, conceptId) || !isKnownConcept(conceptId)) return p;
   return { ...p, completed: { ...p.completed, [conceptId]: at } };
 }
 

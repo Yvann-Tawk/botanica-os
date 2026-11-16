@@ -5,6 +5,8 @@ import { normalizeSettings, type Settings } from './storage/settings';
 import { demoProgress, normalizeProgress } from './progression/progress';
 import { normalizeProgression } from './progression/engine';
 import { normalizeOrbis, resolvePlace } from './terraform/prefs';
+// Eager: registers Lithic concept ids with the progression store before stored progress is normalized below.
+import './lithic/curriculum';
 
 /** The prototype opened on the Universe; that stays the first-visit default. */
 export const FIRST_VISIT_START = 'universe' as const;
