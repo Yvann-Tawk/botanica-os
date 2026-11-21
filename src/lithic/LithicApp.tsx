@@ -11,11 +11,13 @@ import { isDone } from '../progression/progress';
 import type { KV } from '../storage/db';
 import { lithicLessonById } from './curriculum';
 import { useLithicLearning } from './store';
-import { htmlLessonById, daxLessonById, AUTHORED_LESSON_IDS } from './content';
+import { htmlLessonById, daxLessonById, mLessonById, AUTHORED_LESSON_IDS } from './content';
 import { runHtmlChecks } from './runtime/htmlChecks';
 import { runDaxChecks } from './runtime/dax/checks';
+import { runMChecks } from './runtime/m/checks';
 import { HtmlWorkspace } from './academy/HtmlWorkspace';
 import { DaxWorkspace } from './academy/DaxWorkspace';
+import { MWorkspace } from './academy/MWorkspace';
 import type { AcademyAwards } from './academy/LithicAcademy';
 
 const SurveyApp = lazy(() => import('./survey/SurveyApp'));
@@ -139,8 +141,9 @@ export default function LithicApp({ kv, baseXp, active, fullscreen, onToggleFull
   const lesson = lessonCard ? lithicLessonById(lessonCard) : null;
   const htmlLesson = openLessonId ? htmlLessonById(openLessonId) : null;
   const daxLesson = openLessonId && !htmlLesson ? daxLessonById(openLessonId) : null;
-  const academyLesson = htmlLesson ?? daxLesson;
-  const winSub = academyLesson ? `${htmlLesson ? 'The Foundation' : 'The Crystal Matrix'} · ${academyLesson.title}` : 'Lithic — The World Beneath';
+  const mLesson = openLessonId && !htmlLesson && !daxLesson ? mLessonById(openLessonId) : null;
+  const academyLesson = htmlLesson ?? daxLesson ?? mLesson;
+  const winSub = academyLesson ? `${htmlLesson ? 'The Foundation' : daxLesson ? 'The Crystal Matrix' : 'The Refinery'} · ${academyLesson.title}` : 'Lithic — The World Beneath';
 
   return (
     <div className="os" ref={root} style={{ position: 'relative', width: '100%', height: '100vh', minHeight: '720px', overflow: 'hidden', background: '#efe8d6' }}>
@@ -156,6 +159,8 @@ export default function LithicApp({ kv, baseXp, active, fullscreen, onToggleFull
             ? <div className="wbody"><LithicAcademy lesson={htmlLesson} completed={isDone(learn.progress, htmlLesson.conceptId)} initial={saved} awards={learn.awards as AcademyAwards} onSave={(s) => saveLesson(htmlLesson.id, s)} onExit={closeLesson} kicker="The Foundation · HTML" fileName="page.html" runChecks={(code, checks) => runHtmlChecks(code, checks as Parameters<typeof runHtmlChecks>[1])} Workspace={HtmlWorkspace} /></div>
             : daxLesson && saved
             ? <div className="wbody"><LithicAcademy lesson={daxLesson} completed={isDone(learn.progress, daxLesson.conceptId)} initial={saved} awards={learn.awards as AcademyAwards} onSave={(s) => saveLesson(daxLesson.id, s)} onExit={closeLesson} kicker="The Crystal Matrix · DAX" fileName="measure.dax" runChecks={(code, checks) => runDaxChecks(code, checks as Parameters<typeof runDaxChecks>[1])} Workspace={DaxWorkspace} /></div>
+            : mLesson && saved
+            ? <div className="wbody"><LithicAcademy lesson={mLesson} completed={isDone(learn.progress, mLesson.conceptId)} initial={saved} awards={learn.awards as AcademyAwards} onSave={(s) => saveLesson(mLesson.id, s)} onExit={closeLesson} kicker="The Refinery · Power Query M" fileName="query.pq" runChecks={(code, checks) => runMChecks(code, checks as Parameters<typeof runMChecks>[1])} Workspace={MWorkspace} /></div>
             : academyLesson
             ? <div className="wbody" style={{ background: '#f6f2e8' }} />
             : <SurveyApp progress={learn.progress} fitSignal={fitSignal} framePlanet={framePlanet} scale={scale} onOpenLesson={openLesson} onReturnToOrbis={onExitToOrbis} />}

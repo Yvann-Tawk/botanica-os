@@ -132,7 +132,7 @@ export const PLANETS: LithicPlanet[] = [
   { id: 'matrix', n: '02', name: 'The Crystal Matrix', discipline: 'DAX', lang: 'dax', status: 'open',
     blurb: 'Analytical relationships and crystalline networks. The expression language of tabular models.',
     x: 1560, y: 650, R: 128, grad: ['#c9bce0', '#8A78A6', '#4e4368'], accent: '#8A78A6', concepts: MATRIX },
-  { id: 'refinery', n: '03', name: 'The Refinery', discipline: 'Power Query M', lang: 'm', status: 'sealed',
+  { id: 'refinery', n: '03', name: 'The Refinery', discipline: 'Power Query M', lang: 'm', status: 'open',
     blurb: 'Extraction, cleaning and transformation. Refine raw data into shape with Power Query M.',
     x: 1840, y: 1180, R: 132, grad: ['#d79a6f', '#b06a3f', '#5c3418'], accent: '#b06a3f', concepts: REFINERY },
 ];

@@ -128,7 +128,7 @@ function evalNode(n: Node, env: Env): MValue {
       if (isRec(o)) { if (!(n.name in o.fields)) throw new Error(`Record has no field [${n.name}].`); return o.fields[n.name]; }
       throw new Error(`Cannot read [${n.name}] from ${display(o)}.`);
     }
-    case 'index': { const o = evalNode(n.obj, env); const i = num(evalNode(n.idx, env)); if (!Array.isArray(o)) throw new Error('Item access {…} needs a list.'); return o[i]; }
+    case 'index': { const o = evalNode(n.obj, env); const i = num(evalNode(n.idx, env)); if (isTbl(o)) return o.rows[i]; if (!Array.isArray(o)) throw new Error('Item access {…} needs a list or table.'); return o[i]; }
     case 'call': { const f = evalNode(n.fn, env); const args = n.args.map((a) => evalNode(a, env)); if (!isFn(f)) throw new Error('Tried to call a non-function.'); return f.call(args); }
     case 'unary': { if (n.op === '-') return -num(evalNode(n.e, env)); return !truthy(evalNode(n.e, env)); }
     case 'if': return truthy(evalNode(n.c, env)) ? evalNode(n.a, env) : evalNode(n.b, env);
