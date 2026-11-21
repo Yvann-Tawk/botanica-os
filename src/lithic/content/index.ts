@@ -7,8 +7,9 @@ import { STONE_LESSONS } from './html/stone';
 import { WALLS_LESSONS } from './html/walls';
 import { PATHS_LESSONS } from './html/paths';
 import { ARCHIVES_LESSONS } from './html/archives';
+import { CHAMBERS_LESSONS } from './html/chambers';
 
-export const HTML_LESSONS: HtmlLesson[] = [...STONE_LESSONS, ...WALLS_LESSONS, ...PATHS_LESSONS, ...ARCHIVES_LESSONS];
+export const HTML_LESSONS: HtmlLesson[] = [...STONE_LESSONS, ...WALLS_LESSONS, ...PATHS_LESSONS, ...ARCHIVES_LESSONS, ...CHAMBERS_LESSONS];
 export const htmlLessonById = (id: string): HtmlLesson | undefined => HTML_LESSONS.find((l) => l.id === id);
 
 /** Lesson ids with authored content (the rest open the "coming soon" card for now). */
