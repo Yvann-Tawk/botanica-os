@@ -1,13 +1,11 @@
-// The Lithic Academy: the five-stage HTML lesson workspace. Reuses Botanica's lesson shell patterns (stage
-// stepper, task cards, hints, quiz, recap, missions) but the workspace is an HTML editor + sandboxed live
-// preview, validated by the DOM-based HtmlCheck engine. Awards flow through callbacks to the Lithic store.
+// The Lithic Academy: the five-stage lesson shell (Discover → Experiment → Practice → Challenge → Master) plus
+// recap and three missions. It is generic over the discipline: a `runChecks` function validates the learner's
+// code and a `Workspace` component renders the editor + discipline-specific output pane (HTML preview, DAX
+// results, …). The shell — stages, task cards, hints, quiz, recap, missions, awards — is shared across worlds.
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { SimpleEditor } from '../../editor/CodeEditor';
-import { HtmlPreview } from '../runtime/HtmlPreview';
-import { runHtmlChecks, allPass, type HtmlCheckResult } from '../runtime/htmlChecks';
-import type { HtmlExercise, HtmlLesson, HtmlMission } from '../content/types';
-import { HTML_TIERS } from '../content/types';
+import { TIERS } from '../content/types';
+import type { Lesson, Mission } from '../content/types';
 
 type StageId = 'discover' | 'experiment' | 'practice' | 'challenge' | 'master';
 const STAGES: { id: StageId; name: string }[] = [
@@ -16,11 +14,19 @@ const STAGES: { id: StageId; name: string }[] = [
 ];
 type View = StageId | 'recap' | 'missions';
 
+export interface CheckResult { label: string; ok: boolean; detail?: string }
+const allPass = (rs: CheckResult[]) => rs.every((r) => r.ok);
+
+/** The editor + discipline output pane. Each world supplies one (HTML preview, DAX results, …). */
+export interface WorkspaceProps { code: string; editable: boolean; onChange: (v: string) => void; onRun: () => void; canCheck: boolean; fileName: string; ariaLabel: string }
+export type WorkspaceComponent = (props: WorkspaceProps) => ReactNode;
+
+/** Awards decoupled from the check type: they read only ids and XP. */
 export interface AcademyAwards {
-  exercise: (lesson: HtmlLesson, which: 'practice' | 'challenge', ok: boolean, hints: number) => void;
-  quiz: (lesson: HtmlLesson, ok: boolean) => void;
-  lessonDone: (lesson: HtmlLesson) => void;
-  mission: (m: HtmlMission, ok: boolean, hints: number) => boolean;
+  exercise: (lesson: { id: string; conceptId: string; xp: number }, which: 'practice' | 'challenge', ok: boolean, hints: number) => void;
+  quiz: (lesson: { id: string }, ok: boolean) => void;
+  lessonDone: (lesson: { id: string; conceptId: string; xp: number }) => void;
+  mission: (m: { id: string; xpReward: number }, ok: boolean, hints: number) => boolean;
   run: () => void;
 }
 
@@ -28,20 +34,27 @@ interface Saved { code: Record<string, string>; passed: Record<string, boolean>;
 const freshSaved = (): Saved => ({ code: {}, passed: {}, hints: {}, done: {} });
 
 interface Props {
-  lesson: HtmlLesson;
+  lesson: Lesson<unknown>;
   completed: boolean;
   initial?: Partial<Saved>;
   awards: AcademyAwards;
   onSave: (s: Saved) => void;
   onExit: () => void;
+  /** Header kicker, e.g. "The Foundation · HTML". */
+  kicker: string;
+  /** Editor file name, e.g. "page.html" or "measure.dax". */
+  fileName: string;
+  runChecks: (code: string, checks: unknown[]) => CheckResult[];
+  Workspace: WorkspaceComponent;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-export default function LithicAcademy({ lesson, completed, initial, awards, onSave, onExit }: Props) {
+export default function LithicAcademy({ lesson, completed, initial, awards, onSave, onExit, kicker, fileName, runChecks, Workspace }: Props) {
+  const Pane = Workspace;
   const [view, setView] = useState<View>('discover');
   const [s, setS] = useState<Saved>(() => ({ ...freshSaved(), ...initial, code: { ...initial?.code }, passed: { ...initial?.passed }, hints: { ...initial?.hints }, done: { ...initial?.done } }));
-  const [results, setResults] = useState<Record<string, HtmlCheckResult[]>>({});
+  const [results, setResults] = useState<Record<string, CheckResult[]>>({});
   const [hintOpen, setHintOpen] = useState<Record<string, number>>({});
   const [quizPicks, setQuizPicks] = useState<(number | null)[]>(() => lesson.quiz.map(() => null));
 
@@ -51,16 +64,14 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
   const codeFor = (key: string, starter: string) => s.code[key] ?? starter;
   const setCode = useCallback((key: string, v: string) => setS((p) => ({ ...p, code: { ...p.code, [key]: v } })), []);
 
-  const practiceDone = !!s.passed['practice'], challengeDone = !!s.passed['challenge'], masterDone = !!s.done['master'];
-  const lessonComplete = practiceDone && challengeDone && masterDone;
-
-  // mark the lesson complete the first time all three gates pass
+  const lessonComplete = !!s.passed['practice'] && !!s.passed['challenge'] && !!s.done['master'];
   useEffect(() => {
     if (lessonComplete && !s.done['lesson']) { awards.lessonDone(lesson); setS((p) => ({ ...p, done: { ...p.done, lesson: true } })); }
   }, [lessonComplete]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const checkExercise = (which: 'practice' | 'challenge', ex: HtmlExercise) => {
-    const res = runHtmlChecks(codeFor(which, ex.starter), ex.checks);
+  const checkExercise = (which: 'practice' | 'challenge') => {
+    const ex = which === 'practice' ? lesson.practice : lesson.challenge;
+    const res = runChecks(codeFor(which, ex.starter), ex.checks);
     setResults((r) => ({ ...r, [which]: res }));
     const ok = allPass(res);
     awards.exercise(lesson, which, ok, hintOpen[which] ?? 0);
@@ -74,14 +85,14 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
   };
 
   const stageIndex = STAGES.findIndex((x) => x.id === view);
-  const stageDone = (id: StageId) => id === 'discover' || id === 'experiment' ? stageVisited(id) : id === 'master' ? masterDone : !!s.passed[id];
-  function stageVisited(_id: StageId) { return true; }
+  const masterDone = !!s.done['master'];
+  const stageDone = (id: StageId) => id === 'discover' || id === 'experiment' ? true : id === 'master' ? masterDone : !!s.passed[id];
 
   return (
     <div className="ac">
       <div className="ac-head">
         <div>
-          <p className="kicker">The Foundation · HTML · Lesson {pad(lesson.number)}</p>
+          <p className="kicker">{kicker} · Lesson {pad(lesson.number)}</p>
           <h2 className="h2" style={{ margin: 0 }}>{lesson.title}</h2>
         </div>
         <ol className="steps" aria-label="Lesson stages">
@@ -96,7 +107,6 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
       </div>
 
       <div className="ac-split">
-        {/* ---- left: lesson content ---- */}
         <div className="ac-lesson scroll">
           <div className="ac-inner">
             {view === 'discover' && (<>
@@ -132,7 +142,7 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
                       const r = res?.[i];
                       return (<li key={i}>
                         <span className={`ck${r ? (r.ok ? ' ok' : ' no') : ''}`} aria-hidden="true">{r ? (r.ok ? '✓' : '×') : ''}</span>
-                        <span>{c.label}{r && !r.ok && r.detail ? <span style={{ color: '#a8423c' }}> — {r.detail}</span> : null}</span>
+                        <span>{(c as { label: string }).label}{r && !r.ok && r.detail ? <span style={{ color: '#a8423c' }}> — {r.detail}</span> : null}</span>
                       </li>);
                     })}
                   </ul>
@@ -152,8 +162,8 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
                   <p style={{ margin: 0, fontWeight: 600 }}>{q.q}</p>
                   <div className="qopts">
                     {q.opts.map((opt, oi) => {
-                      const picked = quizPicks[qi] === oi, graded = masterDone;
-                      const cls = graded ? (oi === q.a ? ' is-right' : picked ? ' is-wrong' : '') : (picked ? ' is-sel' : '');
+                      const picked = quizPicks[qi] === oi;
+                      const cls = masterDone ? (oi === q.a ? ' is-right' : picked ? ' is-wrong' : '') : (picked ? ' is-sel' : '');
                       return <button key={oi} className={`qopt${cls}`} onClick={() => setQuizPicks((p) => p.map((x, i) => i === qi ? oi : x))}><span className="qdot" aria-hidden="true"></span>{opt}</button>;
                     })}
                   </div>
@@ -164,8 +174,8 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
               {masterDone && <p style={{ color: '#345a04', fontWeight: 600 }}>All correct ✓</p>}
             </>)}
 
-            {view === 'recap' && <Recap lesson={lesson} />}
-            {view === 'missions' && <Missions lesson={lesson} awards={awards} done={s.done} markDone={(id) => setS((p) => ({ ...p, done: { ...p.done, [id]: true } }))} />}
+            {view === 'recap' && <RecapView lesson={lesson} />}
+            {view === 'missions' && <Missions lesson={lesson} awards={awards} runChecks={runChecks} fileName={fileName} Pane={Pane} done={s.done} markDone={(id) => setS((p) => ({ ...p, done: { ...p.done, [id]: true } }))} />}
           </div>
           <div className="ac-nav">
             <button className="btn" onClick={() => { const i = Math.max(0, stageIndex - 1); setView(STAGES[i].id); }} disabled={stageIndex <= 0}>← Back</button>
@@ -175,16 +185,15 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
           </div>
         </div>
 
-        {/* ---- right: HTML workspace ---- */}
         <div className="ac-code">
-          <Workspace
-            view={view}
-            lesson={lesson}
+          <Pane
             code={view === 'practice' ? codeFor('practice', lesson.practice.starter) : view === 'challenge' ? codeFor('challenge', lesson.challenge.starter) : view === 'experiment' ? codeFor('experiment', lesson.experiment.starter) : lesson.discover.example}
             editable={view === 'practice' || view === 'challenge' || view === 'experiment'}
             onChange={(v) => setCode(view, v)}
-            onRun={() => { if (view === 'practice') checkExercise('practice', lesson.practice); else if (view === 'challenge') checkExercise('challenge', lesson.challenge); }}
+            onRun={() => { if (view === 'practice') checkExercise('practice'); else if (view === 'challenge') checkExercise('challenge'); }}
             canCheck={view === 'practice' || view === 'challenge'}
+            fileName={fileName}
+            ariaLabel={`Editor, ${view} stage`}
           />
         </div>
       </div>
@@ -192,31 +201,8 @@ export default function LithicAcademy({ lesson, completed, initial, awards, onSa
   );
 }
 
-/* ---- workspace: editor + sandboxed preview ---- */
-function Workspace({ view, code, editable, onChange, onRun, canCheck }: { view: View; lesson: HtmlLesson; code: string; editable: boolean; onChange: (v: string) => void; onRun: () => void; canCheck: boolean }) {
-  return (
-    <div className="ed">
-      <div className="ed-bar">
-        <div className="ed-tab mono">page.html</div>
-        <div className="ed-actions">
-          {canCheck && <button className="btn-run" onClick={onRun}>Check <span className="kbd">⌘↵</span></button>}
-        </div>
-      </div>
-      {editable
-        ? <SimpleEditor value={code} onChange={onChange} onRun={onRun} ariaLabel={`HTML editor, ${view} stage`} mode="simple" />
-        : <div className="ed-scroll scroll-d" style={{ padding: 0 }}><div className="ed-hl mono" style={{ padding: '14px 16px' }}>{code}</div></div>}
-      <div className="con" style={{ height: '46%' }}>
-        <div className="con-bar"><span>Live preview — sandboxed</span></div>
-        <div className="con-body" style={{ padding: 0, background: '#fff' }}>
-          <HtmlPreview html={code} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ---- recap ---- */
-function Recap({ lesson }: { lesson: HtmlLesson }) {
+function RecapView({ lesson }: { lesson: Lesson<unknown> }) {
   const r = lesson.recap;
   return (<>
     <p className="kicker">Recap · {lesson.title}</p>
@@ -230,16 +216,16 @@ function Recap({ lesson }: { lesson: HtmlLesson }) {
 }
 
 /* ---- missions ---- */
-function Missions({ lesson, awards, done, markDone }: { lesson: HtmlLesson; awards: AcademyAwards; done: Record<string, boolean>; markDone: (id: string) => void }) {
+function Missions({ lesson, awards, runChecks, fileName, Pane, done, markDone }: { lesson: Lesson<unknown>; awards: AcademyAwards; runChecks: (code: string, checks: unknown[]) => CheckResult[]; fileName: string; Pane: WorkspaceComponent; done: Record<string, boolean>; markDone: (id: string) => void }) {
   const [sel, setSel] = useState(0);
   const [code, setCode] = useState<Record<string, string>>({});
-  const [res, setRes] = useState<Record<string, HtmlCheckResult[]>>({});
+  const [res, setRes] = useState<Record<string, CheckResult[]>>({});
   const [hints, setHints] = useState<Record<string, number>>({});
-  const m = lesson.missions[sel];
-  const tier = HTML_TIERS[sel];
+  const m: Mission<unknown> = lesson.missions[sel];
+  const tier = TIERS[sel];
   const c = code[m.id] ?? m.starter;
   const check = () => {
-    const r = runHtmlChecks(c, m.checks); setRes((x) => ({ ...x, [m.id]: r }));
+    const r = runChecks(c, m.checks); setRes((x) => ({ ...x, [m.id]: r }));
     const ok = allPass(r); const first = awards.mission(m, ok, hints[m.id] ?? 0); if (ok && first) markDone(m.id);
   };
   return (
@@ -247,8 +233,8 @@ function Missions({ lesson, awards, done, markDone }: { lesson: HtmlLesson; awar
       <p className="kicker">Optional missions · {lesson.title}</p>
       <div style={{ display: 'flex', gap: 8 }}>
         {lesson.missions.map((mm, i) => (
-          <button key={mm.id} className={`chip`} onClick={() => setSel(i)} style={{ borderColor: sel === i ? '#242820' : undefined, background: done[mm.id] ? '#dfe9d6' : sel === i ? '#eae4d5' : '#f6f2e8' }}>
-            {HTML_TIERS[i].name}{done[mm.id] ? ' ✓' : ''} · +{HTML_TIERS[i].xp}
+          <button key={mm.id} className="chip" onClick={() => setSel(i)} style={{ borderColor: sel === i ? '#242820' : undefined, background: done[mm.id] ? '#dfe9d6' : sel === i ? '#eae4d5' : '#f6f2e8' }}>
+            {TIERS[i].name}{done[mm.id] ? ' ✓' : ''} · +{TIERS[i].xp}
           </button>
         ))}
       </div>
@@ -257,7 +243,7 @@ function Missions({ lesson, awards, done, markDone }: { lesson: HtmlLesson; awar
         <p className="lede" style={{ margin: '0 0 4px', fontSize: 13.5 }}><Markup text={m.objective} /></p>
         <p className="lede" style={{ margin: 0, fontSize: 13.5, color: '#63685c' }}>Expected: <Markup text={m.expected} /></p>
         <ul className="checks">
-          {m.checks.map((ch, i) => { const r = res[m.id]?.[i]; return <li key={i}><span className={`ck${r ? (r.ok ? ' ok' : ' no') : ''}`} aria-hidden="true">{r ? (r.ok ? '✓' : '×') : ''}</span><span>{ch.label}</span></li>; })}
+          {m.checks.map((ch, i) => { const r = res[m.id]?.[i]; return <li key={i}><span className={`ck${r ? (r.ok ? ' ok' : ' no') : ''}`} aria-hidden="true">{r ? (r.ok ? '✓' : '×') : ''}</span><span>{(ch as { label: string }).label}{r && !r.ok && r.detail ? <span style={{ color: '#a8423c' }}> — {r.detail}</span> : null}</span></li>; })}
         </ul>
         <div style={{ marginTop: 8 }}>
           <button className="hintbtn" onClick={() => setHints((h) => ({ ...h, [m.id]: Math.min((h[m.id] ?? 0) + 1, m.hints.length) }))}>Need a hint?</button>
@@ -265,10 +251,8 @@ function Missions({ lesson, awards, done, markDone }: { lesson: HtmlLesson; awar
         </div>
         {done[m.id] && <p style={{ marginTop: 8, color: '#345a04', fontWeight: 600 }}>Complete ✓ (+{tier.xp} XP)</p>}
       </div>
-      <div className="ed" style={{ minHeight: 320, border: '1.5px solid #242820', borderRadius: 12, overflow: 'hidden' }}>
-        <div className="ed-bar"><div className="ed-tab mono">mission.html</div><div className="ed-actions"><button className="btn-run" onClick={check}>Check</button></div></div>
-        <SimpleEditor value={c} onChange={(v) => setCode((x) => ({ ...x, [m.id]: v }))} onRun={check} ariaLabel={`Mission editor, ${m.title}`} mode="simple" />
-        <div className="con" style={{ height: '44%' }}><div className="con-bar"><span>Live preview — sandboxed</span></div><div className="con-body" style={{ padding: 0, background: '#fff' }}><HtmlPreview html={c} /></div></div>
+      <div style={{ minHeight: 320, border: '1.5px solid #242820', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Pane code={c} editable onChange={(v) => setCode((x) => ({ ...x, [m.id]: v }))} onRun={check} canCheck fileName={fileName} ariaLabel={`Mission editor, ${m.title}`} />
       </div>
     </div>
   );

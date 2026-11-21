@@ -129,7 +129,7 @@ export const PLANETS: LithicPlanet[] = [
   { id: 'foundation', n: '01', name: 'The Foundation', discipline: 'HTML', lang: 'html', status: 'open',
     blurb: 'Architecture and construction. Build a digital structure, element by element, in HTML.',
     x: 900, y: 880, R: 150, grad: ['#e6c877', '#c69a3e', '#7a5410'], accent: '#c69a3e', concepts: FOUNDATION },
-  { id: 'matrix', n: '02', name: 'The Crystal Matrix', discipline: 'DAX', lang: 'dax', status: 'sealed',
+  { id: 'matrix', n: '02', name: 'The Crystal Matrix', discipline: 'DAX', lang: 'dax', status: 'open',
     blurb: 'Analytical relationships and crystalline networks. The expression language of tabular models.',
     x: 1560, y: 650, R: 128, grad: ['#c9bce0', '#8A78A6', '#4e4368'], accent: '#8A78A6', concepts: MATRIX },
   { id: 'refinery', n: '03', name: 'The Refinery', discipline: 'Power Query M', lang: 'm', status: 'sealed',

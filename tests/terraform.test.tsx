@@ -25,7 +25,7 @@ describe('world registry', () => {
     expect(langLine(worldById('lithic'))).toBe('HTML · DAX · M');
     expect(langLine(worldById('aether'))).toBe('JS · CSS');
     expect(versionLine(worldById('botanica'))).toBe('v1.0 · open now');
-    expect(versionLine(worldById('lithic'))).toBe('v2.0 · open now · DAX, M to follow');
+    expect(versionLine(worldById('lithic'))).toBe('v2.0 · v3.0 · open now · M to follow');
     expect(versionLine(worldById('ironworks'))).toBe('planned · C# v7.0 · SQL v8.0');
   });
 });
@@ -111,7 +111,7 @@ describe('Terraform OS shell', () => {
     await user.click(within(explorer).getByRole('button', { name: /Lithic/ }));
     expect(within(explorer).getByRole('heading', { name: 'Lithic' })).toBeInTheDocument();
     expect(within(explorer).getByRole('button', { name: 'Enter Lithic' })).toBeEnabled();
-    expect(within(explorer).getByText('v2.0 · open now · DAX, M to follow')).toBeInTheDocument();
+    expect(within(explorer).getByText('v2.0 · v3.0 · open now · M to follow')).toBeInTheDocument();
   });
 
   it('enters the Lithic world (its Survey) and returns to Orbis', async () => {

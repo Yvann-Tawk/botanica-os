@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { normalizeProgression, record, totalXP, XP, EMPTY_PROGRESSION, type Progression } from '../progression/engine';
 import { complete, isDone, normalizeProgress, EMPTY_PROGRESS, type Progress } from '../progression/progress';
 import type { KV } from '../storage/db';
-import type { HtmlLesson, HtmlMission } from './content/types';
+import type { HtmlLesson } from './content/types';
 import type { AcademyAwards } from './academy/LithicAcademy';
 
 export interface LithicLearning {
@@ -63,7 +63,7 @@ export function useLithicLearning(kv: KV): LithicLearning {
       completeConcept(l.conceptId);
       apply([{ type: 'lesson', ref: l.id, award: `li-lesson:${l.id}`, xp: l.xp }]);
     },
-    mission: (m: HtmlMission, ok, hints) => {
+    mission: (m: { id: string; xpReward: number }, ok, hints) => {
       const ref = `li-lm:${m.id}`;
       if (!ok) { apply([{ type: 'check-fail', ref }]); return false; }
       const first = !gRef.current.events.some((e) => e.type === 'lmission' && e.ref === m.id);
