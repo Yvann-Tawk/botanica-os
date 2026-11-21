@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { HTML_LESSONS } from '../src/lithic/content';
 import { ALL_LITHIC_LESSONS, lithicConceptById } from '../src/lithic/curriculum';
 import { HTML_TIERS } from '../src/lithic/content/types';
+import { runHtmlChecks } from '../src/lithic/runtime/htmlChecks';
 
 describe('Lithic HTML content integrity', () => {
   it('every authored lesson matches a curriculum lesson node', () => {
@@ -52,6 +53,18 @@ describe('Lithic HTML content integrity', () => {
       }
       expect(lesson.recap.takeaways.length).toBeGreaterThan(0);
       expect(lesson.objectives.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('every authored check uses a valid selector (none fail to run)', () => {
+    const sample = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>t</title></head><body><h1>x</h1></body></html>';
+    for (const lesson of HTML_LESSONS) {
+      const checkSets = [lesson.practice.checks, lesson.challenge.checks, ...lesson.missions.map((m) => m.checks)];
+      for (const checks of checkSets) {
+        for (const r of runHtmlChecks(sample, checks)) {
+          expect(r.detail ?? '', `invalid selector in ${lesson.id}: ${r.label}`).not.toContain('Check could not run');
+        }
+      }
     }
   });
 });
