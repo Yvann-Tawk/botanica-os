@@ -11,9 +11,11 @@ import type { Progression } from '../progression/engine';
 import type { ShellState } from '../shell/windowReducer';
 import { buildJournal } from './journal';
 import { Orbis } from './Orbis';
-import { BOTANICA_HASH, type OrbisPrefs, type Place } from './prefs';
+import { BOTANICA_HASH, LITHIC_HASH, type OrbisPrefs, type Place } from './prefs';
+import { worldById, type WorldId } from './worlds';
 
 const BotanicaApp = lazy(() => import('../App'));
+const LithicApp = lazy(() => import('../lithic/LithicApp'));
 
 interface Props {
   kv: KV;
@@ -24,11 +26,14 @@ interface Props {
   botanica: { shell: ShellState; progress: Progress; progression: Progression; demo: string | null };
 }
 
-const urlFor = (place: Place) => location.pathname + location.search + (place === 'botanica' ? BOTANICA_HASH : '');
+const hashFor = (place: Place) => place === 'botanica' ? BOTANICA_HASH : place === 'lithic' ? LITHIC_HASH : '';
+const urlFor = (place: Place) => location.pathname + location.search + hashFor(place);
+const placeForHash = (hash: string): Place => hash === BOTANICA_HASH ? 'botanica' : hash === LITHIC_HASH ? 'lithic' : 'orbis';
 
 export default function TerraformOS({ kv, place: initialPlace, settings: initialSettings, orbis: initialOrbis, botanica }: Props) {
   const [place, setPlace] = useState<Place>(initialPlace);
   const [mounted, setMounted] = useState(initialPlace === 'botanica');
+  const [lithicMounted, setLithicMounted] = useState(initialPlace === 'lithic');
   // Orbis mounts the first time it is shown, so a Botanica deep link boots exactly as Botanica always did
   const [hubMounted, setHubMounted] = useState(initialPlace === 'orbis');
   if (place === 'orbis' && !hubMounted) setHubMounted(true);
@@ -36,13 +41,15 @@ export default function TerraformOS({ kv, place: initialPlace, settings: initial
   const [orbis, setOrbis] = useState(initialOrbis);
   const [learning, setLearning] = useState({ progress: botanica.progress, progression: botanica.progression });
   const [resume, setResume] = useState<{ lessonId: string; key: number } | undefined>();
+  const [lithicResume, setLithicResume] = useState<{ lessonId?: string; key: number } | undefined>();
   const [fullscreen, setFullscreen] = useState(() => typeof document !== 'undefined' && !!document.fullscreenElement);
 
   /* ---- places and the browser's back button ---- */
   useEffect(() => {
     const onPop = () => {
-      const p: Place = location.hash === BOTANICA_HASH ? 'botanica' : 'orbis';
+      const p = placeForHash(location.hash);
       if (p === 'botanica') setMounted(true);
+      if (p === 'lithic') setLithicMounted(true);
       setPlace(p);
     };
     window.addEventListener('popstate', onPop);
@@ -54,13 +61,25 @@ export default function TerraformOS({ kv, place: initialPlace, settings: initial
     setPlace('botanica');
     if (location.hash !== BOTANICA_HASH) history.pushState({ terraform: 'botanica' }, '', urlFor('botanica'));
   }, []);
+  const enterLithic = useCallback((lessonId?: string) => {
+    setLithicResume({ lessonId, key: Date.now() });
+    setLithicMounted(true);
+    setPlace('lithic');
+    if (location.hash !== LITHIC_HASH) history.pushState({ terraform: 'lithic' }, '', urlFor('lithic'));
+  }, []);
+  /** Orbis routes every world launch here; dispatch by the world's `entry`. */
+  const enterWorld = useCallback((worldId: WorldId, lessonId?: string) => {
+    const entry = worldById(worldId).entry;
+    if (entry === 'lithic') enterLithic(lessonId);
+    else enterBotanica(lessonId);
+  }, [enterBotanica, enterLithic]);
   const returnToOrbis = useCallback(() => {
     // Undo our own push when we made it, so Back and Forward keep making sense; otherwise rewrite the URL.
-    if ((history.state as { terraform?: string } | null)?.terraform === 'botanica') { history.back(); return; }
+    if ((history.state as { terraform?: string } | null)?.terraform) { history.back(); return; }
     history.replaceState(null, '', urlFor('orbis'));
     setPlace('orbis');
   }, []);
-  useEffect(() => { document.title = place === 'botanica' ? 'Botanica · Terraform OS' : 'Terraform OS'; }, [place]);
+  useEffect(() => { document.title = place === 'botanica' ? 'Botanica · Terraform OS' : place === 'lithic' ? 'Lithic · Terraform OS' : 'Terraform OS'; }, [place]);
 
   /* ---- shared settings: one record, written by whichever world changed it ---- */
   const changeSettings = useCallback((s: Settings) => { setSettings(s); kv.set('settings', s).catch(() => {}); }, [kv]);
@@ -89,8 +108,17 @@ export default function TerraformOS({ kv, place: initialPlace, settings: initial
     <>
       {hubMounted && <div hidden={place !== 'orbis'} {...({ inert: place === 'orbis' ? undefined : '' } as object)}>
         <Orbis active={place === 'orbis'} journal={journal} settings={settings} onSettings={changeSettings} prefs={orbis} onPrefs={changeOrbis}
-          fullscreen={fullscreen} onToggleFullscreen={toggleFullscreen} onEnterBotanica={enterBotanica} />
+          fullscreen={fullscreen} onToggleFullscreen={toggleFullscreen} onEnterWorld={enterWorld} />
       </div>}
+      {lithicMounted && (
+        <div hidden={place !== 'lithic'} {...({ inert: place === 'lithic' ? undefined : '' } as object)}>
+          <Suspense fallback={<div className="os" style={{ height: '100vh', background: '#efe8d6' }} />}>
+            <LithicApp kv={kv} baseXp={journal.xp}
+              active={place === 'lithic'} fullscreen={fullscreen} onToggleFullscreen={toggleFullscreen}
+              onExitToOrbis={returnToOrbis} resume={lithicResume} />
+          </Suspense>
+        </div>
+      )}
       {mounted && (
         <div hidden={place !== 'botanica'} {...({ inert: place === 'botanica' ? undefined : '' } as object)}>
           <Suspense fallback={<div className="os" style={{ height: '100vh', background: '#efe8d6' }} />}>

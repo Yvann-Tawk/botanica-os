@@ -13,9 +13,9 @@ import { EMPTY_PROGRESSION, type Progression } from '../src/progression/engine';
 import { LESSONS } from '../src/content/curriculum';
 
 describe('world registry', () => {
-  it('opens Botanica only; the other worlds are previews with planned versions, never dates', () => {
-    expect(WORLDS.map((w) => [w.id, w.status])).toEqual([['botanica', 'available'], ['lithic', 'soon'], ['aether', 'soon'], ['ironworks', 'soon']]);
-    expect(WORLDS.filter((w) => w.entry).map((w) => w.id)).toEqual(['botanica']);
+  it('opens Botanica and Lithic; the rest are previews with planned versions, never dates', () => {
+    expect(WORLDS.map((w) => [w.id, w.status])).toEqual([['botanica', 'available'], ['lithic', 'available'], ['aether', 'soon'], ['ironworks', 'soon']]);
+    expect(WORLDS.filter((w) => w.entry).map((w) => w.id)).toEqual(['botanica', 'lithic']);
     const versions = WORLDS.flatMap((w) => w.langs.map((l) => `${l.name} ${l.version}`));
     expect(versions).toEqual(['Python v1.0', 'HTML v2.0', 'DAX v3.0', 'Power Query M v4.0', 'JavaScript v5.0', 'CSS v6.0', 'C# v7.0', 'SQL v8.0']);
     for (const w of WORLDS) expect(versionLine(w)).not.toMatch(/20\d\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i);
@@ -25,6 +25,7 @@ describe('world registry', () => {
     expect(langLine(worldById('lithic'))).toBe('HTML · DAX · M');
     expect(langLine(worldById('aether'))).toBe('JS · CSS');
     expect(versionLine(worldById('botanica'))).toBe('v1.0 · open now');
+    expect(versionLine(worldById('lithic'))).toBe('v2.0 · v3.0 · v4.0 · open now');
     expect(versionLine(worldById('ironworks'))).toBe('planned · C# v7.0 · SQL v8.0');
   });
 });
@@ -57,7 +58,7 @@ describe('launch place and Orbis preferences', () => {
 describe('journal', () => {
   it('starts empty for a new learner', () => {
     const j = buildJournal(EMPTY_PROGRESS, EMPTY_PROGRESSION);
-    expect(j).toMatchObject({ xp: 0, lessonsDone: 0, lessonsTotal: LESSONS.length, missionsDone: 0, streak: 0, worldsOpen: 1, worldsTotal: 4, marks: [] });
+    expect(j).toMatchObject({ xp: 0, lessonsDone: 0, lessonsTotal: LESSONS.length, missionsDone: 0, streak: 0, worldsOpen: 2, worldsTotal: 4, marks: [] });
     expect(j.level).toMatchObject({ n: 1, name: 'Spore Cadet' });
     expect(j.next.lessonId).toBe(LESSONS[0].id);
   });
@@ -92,16 +93,38 @@ describe('Terraform OS shell', () => {
     return { user, kv };
   }
 
-  it('launches into Orbis; Coming Soon worlds never launch', async () => {
+  it('launches into Orbis; sealed worlds never launch', async () => {
     const { user } = setup();
     const explorer = screen.getByLabelText('Orbis Explorer window');
     expect(explorer).toHaveClass('is-open');
     expect(screen.queryByRole('navigation', { name: 'Seed tray' })).toBeNull(); // Botanica is not even mounted yet
-    await user.click(within(explorer).getByRole('button', { name: /Lithic/ }));
-    expect(within(explorer).getByRole('heading', { name: 'Lithic' })).toBeInTheDocument();
+    await user.click(within(explorer).getByRole('button', { name: /Aether/ }));
+    expect(within(explorer).getByRole('heading', { name: 'Aether' })).toBeInTheDocument();
     expect(within(explorer).getByRole('button', { name: 'Coming soon' })).toBeDisabled();
     expect(within(explorer).queryByRole('button', { name: /^Enter/ })).toBeNull();
-    expect(within(explorer).getByText('planned · HTML v2.0 · DAX v3.0 · Power Query M v4.0')).toBeInTheDocument();
+    expect(within(explorer).getByText('planned · JavaScript v5.0 · CSS v6.0')).toBeInTheDocument();
+  });
+
+  it('Lithic is open: its dossier offers Enter, with HTML open and DAX/M to follow', async () => {
+    const { user } = setup();
+    const explorer = screen.getByLabelText('Orbis Explorer window');
+    await user.click(within(explorer).getByRole('button', { name: /Lithic/ }));
+    expect(within(explorer).getByRole('heading', { name: 'Lithic' })).toBeInTheDocument();
+    expect(within(explorer).getByRole('button', { name: 'Enter Lithic' })).toBeEnabled();
+    expect(within(explorer).getByText('v2.0 · v3.0 · v4.0 · open now')).toBeInTheDocument();
+  });
+
+  it('enters the Lithic world (its Survey) and returns to Orbis', async () => {
+    const { user } = setup();
+    const explorer = screen.getByLabelText('Orbis Explorer window');
+    await user.click(within(explorer).getByRole('button', { name: /Lithic/ }));
+    await user.click(within(explorer).getByRole('button', { name: 'Enter Lithic' }));
+    await screen.findByLabelText('Survey window');
+    expect(location.hash).toBe('#/lithic');
+    expect(screen.getByLabelText('Orbis Explorer window').closest('[hidden]')).not.toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Return to Orbis' }));
+    await waitFor(() => expect(screen.getByLabelText('Orbis Explorer window').closest('[hidden]')).toBeNull());
+    expect(location.hash).toBe('');
   });
 
   it('enters the real Botanica and returns to Orbis without losing anything', async () => {

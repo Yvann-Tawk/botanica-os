@@ -11,6 +11,7 @@ import '@fontsource/jetbrains-mono/700.css';
 import './styles/prototype.css';
 import './styles/additions.css';
 import './styles/orbis.css';
+import './styles/lithic.css';
 import TerraformOS from './terraform/TerraformOS';
 import { boot } from './boot';
 import { openKV } from './storage/db';

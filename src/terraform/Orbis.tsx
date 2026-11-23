@@ -38,17 +38,17 @@ interface Props {
   onPrefs: (p: OrbisPrefs) => void;
   fullscreen: boolean;
   onToggleFullscreen: () => Promise<boolean>;
-  /** Hand off to the existing Botanica app; a lesson id resumes that lesson. */
-  onEnterBotanica: (lessonId?: string) => void;
+  /** Hand off to a world's app; a lesson id resumes that lesson. Routed by the world's `entry`. */
+  onEnterWorld: (worldId: WorldId, lessonId?: string) => void;
 }
 
 const fmt = (n: number) => n.toLocaleString('en');
 
-export function Orbis({ active, journal: j, settings, onSettings, prefs, onPrefs, fullscreen, onToggleFullscreen, onEnterBotanica }: Props) {
+export function Orbis({ active, journal: j, settings, onSettings, prefs, onPrefs, fullscreen, onToggleFullscreen, onEnterWorld }: Props) {
   const [shell, dispatch] = useReducer(hubShell.shellReducer, prefs.layout, (l) => hubShell.fromLayout(l, hubShell.initialShell('orbis')));
   const [size, setSize] = useState({ W: 1440, H: 900 });
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [launching, setLaunching] = useState<string | null | undefined>(undefined); // undefined = closed; null = no lesson
+  const [launching, setLaunching] = useState<{ world: WorldId; lessonId?: string } | null>(null); // null = closed
   const [comp, setComp] = useState({ react: false, bubble: null as string | null, pets: 0 });
   const root = useRef<HTMLDivElement>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -97,15 +97,18 @@ export function Orbis({ active, journal: j, settings, onSettings, prefs, onPrefs
     onPrefs({ ...prefsRef.current, world: id });
     if (!shell.wins.orbis.open || shell.wins.orbis.min) openApp('orbis');
   };
-  const enterBotanica = useCallback((lessonId?: string) => {
+  /** Launch a specific world (defaults to the one selected in Explorer). */
+  const enterWorld = useCallback((worldId: WorldId, lessonId?: string) => {
     dispatch({ type: 'menu', menu: null });
-    setLaunching(lessonId ?? null);
+    setLaunching({ world: worldId, lessonId });
   }, []);
+  /** Jump straight into Botanica from the hub's Botanica affordances. */
+  const enterBotanica = useCallback((lessonId?: string) => enterWorld('botanica', lessonId), [enterWorld]);
   useEffect(() => {
-    if (launching === undefined) return;
-    const t = setTimeout(() => { onEnterBotanica(launching ?? undefined); setLaunching(undefined); }, rm ? 0 : TRANSIT_MS);
+    if (!launching) return;
+    const t = setTimeout(() => { onEnterWorld(launching.world, launching.lessonId); setLaunching(null); }, rm ? 0 : TRANSIT_MS);
     return () => clearTimeout(t);
-  }, [launching, rm, onEnterBotanica]);
+  }, [launching, rm, onEnterWorld]);
   const stir = () => {
     dispatch({ type: 'menu', menu: null });
     if (!prefs.showComp) { toast('Cygnus is dormant — enable the companion in Settings'); return; }
@@ -236,7 +239,7 @@ export function Orbis({ active, journal: j, settings, onSettings, prefs, onPrefs
               <div className="drow"><span className="dk2">Status</span><span style={{ fontSize: '14px' }}>{avail ? 'Available now — enter any time.' : 'Terraforming · preview only.'}</span></div>
               <div className="drow"><span className="dk2">{avail ? 'Release' : 'Planned'}</span><span className="mono" style={{ fontSize: '13px' }}>{versionLine(world)}</span></div>
               <div className="dact">
-                {avail && <button className="btn moss" onClick={() => enterBotanica()}><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#f6f2e8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 8 H12 M8 3 L13 8 L8 13"></path></svg>Enter {world.name}</button>}
+                {avail && <button className="btn moss" onClick={() => enterWorld(world.id)}><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#f6f2e8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 8 H12 M8 3 L13 8 L8 13"></path></svg>Enter {world.name}</button>}
                 {!avail && <><button className="btn" disabled>Coming soon</button><span className="mono" style={{ fontSize: '12px', color: '#8a6000' }}>Preview only · {versionLine(world)}</span></>}
               </div>
             </div>
@@ -319,18 +322,18 @@ export function Orbis({ active, journal: j, settings, onSettings, prefs, onPrefs
         </div>
       </nav>
 
-      {/* LAUNCH OVERLAY: a short transit, then the real Botanica takes over */}
-      {launching !== undefined && (
-        <div className="cele" role="dialog" aria-modal="true" aria-label="Entering Botanica">
+      {/* LAUNCH OVERLAY: a short transit, then the real world takes over */}
+      {launching && (() => { const w = worldById(launching.world); return (
+        <div className="cele" role="dialog" aria-modal="true" aria-label={`Entering ${w.name}`}>
           <div className="cele-card">
             <TransitPortal />
-            <p className="mono" style={{ margin: '0 0 6px', fontSize: '12px', color: '#8a6000', letterSpacing: '.04em' }}>TRANSIT · ORBIS → BOTANICA</p>
-            <p className="disp" style={{ margin: '0 0 10px', fontSize: '30px' }}>Entering Botanica</p>
-            <p style={{ margin: '0 auto 18px', fontSize: '14.5px', lineHeight: '1.55', color: '#3c4036', maxWidth: '400px' }}>Opening the Python world exactly as you left it. Your XP, lessons and missions come with you.</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}><button className="btn pri" onClick={() => setLaunching(undefined)}>Back to Orbis</button></div>
+            <p className="mono" style={{ margin: '0 0 6px', fontSize: '12px', color: '#8a6000', letterSpacing: '.04em' }}>TRANSIT · ORBIS → {w.name.toUpperCase()}</p>
+            <p className="disp" style={{ margin: '0 0 10px', fontSize: '30px' }}>Entering {w.name}</p>
+            <p style={{ margin: '0 auto 18px', fontSize: '14.5px', lineHeight: '1.55', color: '#3c4036', maxWidth: '400px' }}>Opening {w.name} exactly as you left it. Your XP, lessons and missions come with you.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}><button className="btn pri" onClick={() => setLaunching(null)}>Back to Orbis</button></div>
           </div>
         </div>
-      )}
+      ); })()}
 
       <Toasts toasts={toasts} />
     </div>

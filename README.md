@@ -7,11 +7,28 @@ to go next.
 | World | Languages | Status |
 |---|---|---|
 | **Botanica** | Python | Open (V1.0) |
-| Lithic | HTML, DAX, Power Query M | Coming soon (V2.0–V4.0) |
+| **Lithic** | HTML, DAX, Power Query M | Open (V2.0–V4.0) |
 | Aether | JavaScript, CSS | Coming soon (V5.0–V6.0) |
 | Ironworks | C#, SQL | Coming soon (V7.0–V8.0) |
 
-How the hub and the worlds fit together: [docs/TERRAFORM.md](docs/TERRAFORM.md).
+How the hub and the worlds fit together: [docs/TERRAFORM.md](docs/TERRAFORM.md). Lithic's three disciplines and their
+honest, limited language engines: [docs/LITHIC.md](docs/LITHIC.md).
+
+## Lithic — the web & data world (System 02)
+
+Lithic teaches **HTML**, **DAX** and **Power Query M** from a geological "Survey": three planets you drill into —
+discipline → mini-planet → lesson. Each lesson uses the same five-stage shell as Botanica, with a recap and three
+optional missions, but a workspace suited to its language: an HTML editor over a **sandboxed live preview**, or a
+formula editor over a **live result**. The three language engines are honest, documented subsets (labelled
+"educational, not Power BI / Power Query"), and non-executable topics are taught with syntax checks that say so.
+Lithic keeps its own progress; the shell shows one global XP total. Details: [docs/LITHIC.md](docs/LITHIC.md).
+
+- **The Foundation (HTML)** — 40 lessons across 8 mini-planets, from the first tag to a complete, accessible,
+  semantic website, validated against the real DOM.
+- **The Crystal Matrix (DAX)** — 20 lessons over a sample tabular model: aggregation, iterators, filter/row context,
+  CALCULATE, RELATED.
+- **The Refinery (Power Query M)** — 20 lessons over a messy sample table: `let … in`, lists, records, filtering,
+  cleaning, conditional columns.
 
 ## Botanica — the Python world
 

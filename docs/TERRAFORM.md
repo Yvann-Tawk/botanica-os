@@ -1,10 +1,12 @@
 # Terraform OS — architecture and world rollout
 
-Terraform OS is the operating system. **Orbis** is its hub. **Botanica** (Python) is the first learning world and,
-in V1.0, the only open one. **Lithic**, **Aether** and **Ironworks** are planned worlds, shown in Orbis as previews.
+Terraform OS is the operating system. **Orbis** is its hub. **Botanica** (Python) is the first learning world;
+**Lithic** (System 02 — HTML, DAX, Power Query M) is the second and is open. **Aether** and **Ironworks** are planned
+worlds, shown in Orbis as previews.
 
 This document covers how Orbis was integrated into the existing Botanica app (2026-11-15), how the pieces fit, and
-where future worlds go. Botanica's own architecture is in [ARCHITECTURE.md](ARCHITECTURE.md) and is unchanged.
+where future worlds go. Lithic's own structure and its three language engines are in [LITHIC.md](LITHIC.md).
+Botanica's architecture is in [ARCHITECTURE.md](ARCHITECTURE.md) and is unchanged.
 
 ## Naming
 
@@ -13,7 +15,8 @@ where future worlds go. Botanica's own architecture is in [ARCHITECTURE.md](ARCH
 | Terraform OS | The product and the OS shell | Browser title, PWA manifest, Orbis menu bar, backups, update prompts |
 | Orbis | The hub: world atlas, Journal, Settings | The default launch screen |
 | Botanica | The Python world (the original Botanica OS app) | Its own menu bar, lessons, curriculum, Sprout |
-| Lithic · Aether · Ironworks | Future worlds | Orbis previews only |
+| Lithic | System 02: HTML, DAX, Power Query M | Its own shell, the Survey navigator, the generic Academy ([LITHIC.md](LITHIC.md)) |
+| Aether · Ironworks | Future worlds | Orbis previews only |
 
 Internal identifiers were deliberately **not** renamed: the IndexedDB database is still `botanica`, the localStorage
 prefix is still `botanica:`, and backups still carry `app: 'botanica-os'`. Renaming them would need a data migration
@@ -27,7 +30,7 @@ hard-codes a world.
 | World | Theme | Languages (release) | Status |
 |---|---|---|---|
 | Botanica | Botanical | Python (V1.0) | Available |
-| Lithic | Geological, crystalline | HTML (V2.0), DAX (V3.0), Power Query M (V4.0) | Coming soon |
+| Lithic | Geological, crystalline | HTML (V2.0), DAX (V3.0), Power Query M (V4.0) — all open | Available ([LITHIC.md](LITHIC.md)) |
 | Aether | Ethereal, floating isles | JavaScript (V5.0), CSS (V6.0) | Coming soon |
 | Ironworks | Industrial, mechanical | C# (V7.0), SQL (V8.0) | Coming soon |
 
@@ -96,6 +99,10 @@ include `orbis` automatically because they export every key.
 
 ### When a second world ships
 
+Lithic (System 02) realized this: it owns `lithic-progress` / `lithic-progression` and the shell shows the **sum** of
+the two worlds' XP (see [LITHIC.md](LITHIC.md)). The progression store was generalised with a world-agnostic concept
+registry so non-Python ids persist. The original plan below still describes the fuller path (one tagged event log).
+
 Per-world progress (completed lessons, missions, mastery, projects, achievements) should stay with that world, keyed
 by world, while XP, level and streak stay global. The least disruptive path:
 
@@ -143,7 +150,8 @@ API is blocked (some embedded frames, iOS Safari for non-video elements) a toast
 
 ## Known limitations
 
-- Only Botanica has a learning engine; the other worlds are previews by design.
+- Botanica and Lithic have learning engines; Aether and Ironworks are previews by design. Lithic's three language
+  engines are documented subsets, labelled educational — see [LITHIC.md](LITHIC.md).
 - The app icons (favicon, PWA icons) are still the Botanica artwork; no Terraform OS icon was part of the handoff.
 - The handoff contained no rendered screenshots, so fidelity was checked against the design source, not images.
 - `?demo=` presets show demo progress in Orbis too (display-only, never saved).

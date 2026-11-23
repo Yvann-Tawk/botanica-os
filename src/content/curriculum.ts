@@ -60,6 +60,11 @@ export const REGIONS: Region[] = [
 
 export const CONCEPTS_PER_REGION = 6;
 export const ALL_CONCEPTS = REGIONS.flatMap((r) => r.concepts);
+
+// Register Botanica's concept ids with the world-agnostic progression store, so completions persist and
+// validate. Other worlds (Lithic, …) register their own ids from their own curricula.
+import { registerConcepts } from '../progression/conceptRegistry';
+registerConcepts(ALL_CONCEPTS.map((c) => c.id));
 export const conceptById = (id: string) => ALL_CONCEPTS.find((c) => c.id === id);
 export const conceptByLesson = (lessonId: string) => ALL_CONCEPTS.find((c) => c.lessonId === lessonId);
 export const regionOf = (conceptId: string) => REGIONS.find((r) => r.concepts.some((c) => c.id === conceptId));

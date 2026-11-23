@@ -9,3 +9,7 @@ playwright-report
 # Local tooling and duplicates
 .claude/
 botanica-os-source.zip
+terraform-os-orbis-source.zip
+terraform-os-lithic-handoff.zip
+.lithic-handoff/
+Claude outputs/
